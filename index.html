@@ -1,0 +1,157 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Urban Fury Mobile</title>
+<style>
+body {
+    margin: 0;
+    background: black;
+    font-family: Arial;
+    overflow: hidden;
+}
+
+#game {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(to top, #111, #333);
+}
+
+.fighter {
+    position: absolute;
+    bottom: 120px;
+    width: 60px;
+    height: 120px;
+    border-radius: 10px;
+}
+
+#player {
+    left: 50px;
+    background: cyan;
+}
+
+#enemy {
+    right: 50px;
+    background: crimson;
+}
+
+.health-container {
+    position: absolute;
+    top: 20px;
+    width: 45%;
+    height: 20px;
+    background: #444;
+}
+
+#player-health-container { left: 10px; }
+#enemy-health-container { right: 10px; }
+
+.health-bar {
+    height: 100%;
+    width: 100%;
+    background: lime;
+}
+
+#controls {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 130px;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+button {
+    width: 70px;
+    height: 70px;
+    font-size: 20px;
+    border-radius: 50%;
+    border: none;
+}
+
+.move { background: gray; color: white; }
+.attack { background: orange; }
+.special { background: purple; color: white; }
+</style>
+</head>
+<body>
+
+<div id="game">
+    <div id="player" class="fighter"></div>
+    <div id="enemy" class="fighter"></div>
+
+    <div id="player-health-container" class="health-container">
+        <div id="player-health" class="health-bar"></div>
+    </div>
+
+    <div id="enemy-health-container" class="health-container">
+        <div id="enemy-health" class="health-bar"></div>
+    </div>
+
+    <div id="controls">
+        <button class="move" onclick="moveLeft()">◀</button>
+        <button class="move" onclick="moveRight()">▶</button>
+        <button class="attack" onclick="attack()">👊</button>
+        <button class="special" onclick="special()">⚡</button>
+    </div>
+</div>
+
+<script>
+let player = document.getElementById("player");
+let enemy = document.getElementById("enemy");
+let playerHealth = 100;
+let enemyHealth = 100;
+let playerX = 50;
+let specialMeter = 0;
+
+function moveLeft() {
+    playerX -= 20;
+    if (playerX < 0) playerX = 0;
+    player.style.left = playerX + "px";
+}
+
+function moveRight() {
+    playerX += 20;
+    if (playerX > window.innerWidth - 60) playerX = window.innerWidth - 60;
+    player.style.left = playerX + "px";
+}
+
+function attack() {
+    let enemyX = window.innerWidth - 110;
+    if (Math.abs(playerX - enemyX) < 100) {
+        enemyHealth -= 10;
+        specialMeter += 10;
+        updateHealth();
+    }
+}
+
+function special() {
+    if (specialMeter >= 50) {
+        enemyHealth -= 25;
+        specialMeter = 0;
+        updateHealth();
+    }
+}
+
+function updateHealth() {
+    document.getElementById("enemy-health").style.width = enemyHealth + "%";
+    if (enemyHealth <= 0) {
+        alert("You Win!");
+        resetGame();
+    }
+}
+
+function resetGame() {
+    enemyHealth = 100;
+    playerHealth = 100;
+    specialMeter = 0;
+    updateHealth();
+}
+</script>
+
+</body>
+</html>
