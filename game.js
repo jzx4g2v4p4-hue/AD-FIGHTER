@@ -71,8 +71,18 @@ const SPRITES = {
     }
   }
 };
+/*
+Expected sprite sheet layout (placeholder paths above):
+- player_sheet.png    rows: idle, run, jump, fall, shoot, hurt, death
+- enemy_sheet.png     rows: idle, run, shoot, hurt, death
+- boss_sheet.png      rows: idle, attack, hurt, death
+- explosion_sheet.png rows: boom
+Each row is horizontal frames with fixed frameWidth/frameHeight from SPRITES.
+*/
 
 const ASSETS = {};
+let spritesInitialized = false;
+const screenShake = { time: 0, power: 0, x: 0, y: 0 };
 
 function loadSpriteSheet(cfg) {
   const img = new Image();
@@ -83,6 +93,8 @@ function loadSpriteSheet(cfg) {
 }
 
 function initSpriteAssets() {
+  if (spritesInitialized) return;
+  spritesInitialized = true;
   Object.values(SPRITES).forEach(loadSpriteSheet);
 }
 
@@ -132,6 +144,29 @@ function drawSpriteFrame(spriteKey, animState, worldX, worldY, facing = 1, alpha
   );
   ctx.restore();
   return true;
+}
+
+function addScreenShake(power = 2, time = 6) {
+  screenShake.power = Math.max(screenShake.power, power);
+  screenShake.time = Math.max(screenShake.time, time);
+}
+
+function updateScreenShake() {
+  if (screenShake.time > 0) {
+    screenShake.time--;
+    screenShake.x = (Math.random() - 0.5) * screenShake.power;
+    screenShake.y = (Math.random() - 0.5) * screenShake.power;
+    screenShake.power *= 0.9;
+    if (screenShake.time <= 0 || screenShake.power < 0.2) {
+      screenShake.time = 0;
+      screenShake.power = 0;
+      screenShake.x = 0;
+      screenShake.y = 0;
+    }
+  } else {
+    screenShake.x = 0;
+    screenShake.y = 0;
+  }
 }
 
 // ---- LEVEL DEFINITIONS ----
@@ -241,13 +276,19 @@ let cutscenePlayer = null;
 // ---- INIT ----
 function initLevel(li) {
   const L = LEVELS[li];
+  screenShake.time = 0;
+  screenShake.power = 0;
+  screenShake.x = 0;
+  screenShake.y = 0;
   state = {
     level: li,
     player: {
       x:60, y:260, vx:0, vy:0, onGround:false, facing:1, hp:3, maxHp:3, invincible:0,
       coyote: 0, gunRecoil: 0, gunFlash: 0, runFrame: 0,
       anim: createAnimState('idle'),
-      hurtTimer: 0
+      hurtTimer: 0,
+      shootTimer: 0,
+      deadTimer: 0
     },
     gems:     L.gems.map(g => ({ x:g[0], y:g[1], collected:false })),
     enemies:  L.enemies.map(e => ({
@@ -437,10 +478,12 @@ function drawBossFallback(b, alpha = 1) {
 }
 
 function getPlayerAnimState(p) {
+  if (p.hp <= 0 || p.deadTimer > 0) return 'death';
   if (p.invincible > 0 && p.hurtTimer > 0) return 'hurt';
-  if (p.gunFlash > 0) return 'shoot';
+  if (p.shootTimer > 0 && Math.abs(p.vx) < 0.65 && p.onGround) return 'shoot';
   if (!p.onGround) return p.vy < 0 ? 'jump' : 'fall';
   if (Math.abs(p.vx) > 0.7) return 'run';
+  if (p.shootTimer > 0) return 'shoot';
   return 'idle';
 }
 
@@ -524,8 +567,15 @@ function drawEnemyShot(s) {
 function drawExplosions() {
   state.explosions.forEach(ex=>{
     const drawn = drawSpriteFrame('explosion', ex.anim, ex.x, ex.y, 1, ex.life / ex.maxLife);
+    const x = Math.round(ex.x - state.camX), y = Math.round(ex.y);
+    const pulse = Math.max(2, ex.radius * (ex.life / ex.maxLife) * 0.6);
+    ctx.save();
+    ctx.globalAlpha = (ex.life / ex.maxLife) * 0.45;
+    ctx.strokeStyle = '#ffd166';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, pulse, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
     if (!drawn) {
-      const x = Math.round(ex.x - state.camX), y = Math.round(ex.y);
       const r = Math.max(4, ex.radius * (ex.life / ex.maxLife));
       ctx.save();
       ctx.globalAlpha = ex.life / ex.maxLife;
@@ -600,6 +650,19 @@ function spawnSparkBurst(x, y, dir = 1, n = 6) {
       vy: (Math.random()-0.5) * 1.5,
       life: 14 + Math.floor(Math.random() * 8),
       color: ['#fffbc7', '#ffc65e', '#ff8f2e'][Math.floor(Math.random() * 3)]
+    });
+  }
+}
+
+function spawnShellCasings(x, y, dir = 1, n = 2) {
+  for (let i = 0; i < n; i++) {
+    state.particles.push({
+      x: x - state.camX,
+      y: y + (Math.random() - 0.5) * 3,
+      vx: -dir * (1.2 + Math.random() * 2.2),
+      vy: -1.5 - Math.random() * 2,
+      life: 28 + Math.floor(Math.random() * 10),
+      color: ['#d7b97a', '#f4d77f', '#b38b42'][Math.floor(Math.random() * 3)]
     });
   }
 }
@@ -728,6 +791,8 @@ function updatePlayer() {
   if (p.y>H+50){ p.hp=Math.max(0,p.hp-1); p.x=60; p.y=260; p.vy=0; p.invincible=60; }
   if (p.invincible>0) p.invincible--;
   p.hurtTimer = Math.max(0, p.hurtTimer - 1);
+  p.shootTimer = Math.max(0, p.shootTimer - 1);
+  p.deadTimer = Math.max(0, p.deadTimer - 1);
   if (state.fireCooldown>0) state.fireCooldown--;
   p.gunRecoil = Math.max(0, p.gunRecoil - 1);
   p.gunFlash = Math.max(0, p.gunFlash - 1);
@@ -756,10 +821,13 @@ function fireShot() {
     life: 70
   });
   p.gunRecoil = 6;
-  p.gunFlash = 3;
+  p.gunFlash = 4;
+  p.shootTimer = 8;
   spawnParticles(p.x+p.facing*16, p.y+10, ['#fff799','#ff8c00','#ffd700'], 5);
   spawnParticles(p.x+p.facing*8, p.y+8, ['#c2a35f','#f0d28a'], 2);
   spawnSparkBurst(p.x + p.facing*16, p.y + 10, p.facing, 7);
+  spawnShellCasings(p.x + p.facing * 8, p.y + 8, p.facing, 2);
+  addScreenShake(1.4, 4);
 }
 
 function updateShooting() {
@@ -773,6 +841,7 @@ function updateShooting() {
 function spawnExplosion(x, y, radius = 56) {
   state.explosions.push({ x, y, radius, life: 18, maxLife: 18, anim: createAnimState('boom') });
   spawnParticles(x, y, ['#ffef99','#ff9433','#ff3300'], 26);
+  addScreenShake(radius > 70 ? 5.5 : 4, 10);
 }
 
 function updateBombs() {
@@ -796,17 +865,22 @@ function updateExplosions() {
         if (Math.hypot(e.x - ex.x, (e.y - 10) - ex.y) < ex.radius) {
           e.alive = false;
           e.deadTimer = 20;
+          e.vx = 0;
           spawnParticles(e.x, e.y, PRIDE_COLS, 18);
+          spawnSparkBurst(e.x, e.y - 8, (Math.random() > 0.5 ? 1 : -1), 8);
+          addScreenShake(2.4, 6);
         }
       });
       if (state.boss && state.boss.alive && Math.hypot(state.boss.x - ex.x, state.boss.y - ex.y) < ex.radius + 16) {
         state.boss.hp = Math.max(0, state.boss.hp - 2);
         state.boss.hurtTimer = 12;
         spawnParticles(state.boss.x, state.boss.y, ['#ffcc66','#ff3333','#fff'], 20);
+        addScreenShake(2.8, 7);
         if (state.boss.hp <= 0) {
           state.boss.alive = false;
           state.boss.deadTimer = 30;
           spawnParticles(state.boss.x, state.boss.y, PRIDE_COLS, 30);
+          addScreenShake(7, 18);
         }
       }
     }
@@ -826,12 +900,16 @@ function updateBullets() {
       if (Math.abs(b.x-e.x)<16 && Math.abs(b.y-(e.y-8))<16){
         e.hp--;
         e.hurtTimer = 10;
+        e.x += b.dir * 1.6;
         spawnParticles(e.x, e.y-8, ['#ff66ff','#9966ff','#fff'], 8);
         spawnSparkBurst(e.x, e.y - 8, b.dir, 4);
+        addScreenShake(1.1, 3);
         if (e.hp<=0){
           e.alive=false;
           e.deadTimer=20;
+          e.vx = 0;
           spawnParticles(e.x, e.y, PRIDE_COLS, 14);
+          addScreenShake(2.2, 6);
         }
         hit = true;
       }
@@ -844,10 +922,12 @@ function updateBullets() {
         boss.hurtTimer = 12;
         spawnParticles(boss.x, boss.y-10, ['#ff6666','#ff2222','#fff'], 8);
         spawnSparkBurst(boss.x - 12, boss.y - 12, b.dir, 6);
+        addScreenShake(1.6, 4);
         if (boss.hp<=0){
           boss.alive=false;
           boss.deadTimer = 30;
           spawnParticles(boss.x, boss.y, PRIDE_COLS, 30);
+          addScreenShake(7, 18);
         }
         hit = true;
       }
@@ -896,6 +976,7 @@ function updateEnemyShots() {
       p.hurtTimer = 22;
       p.vy=-4;
       spawnParticles(p.x, p.y, ['#ff2200','#ff8800','#fff'], 8);
+      addScreenShake(2.2, 5);
       return false;
     }
     return true;
@@ -917,6 +998,7 @@ function updateEnemies() {
     if (p.invincible===0 && Math.abs(p.x-e.x)<20 && Math.abs(p.y+16-e.y)<20){
       p.hp=Math.max(0,p.hp-1); p.invincible=80; p.hurtTimer=22; p.vy=-5;
       spawnParticles(p.x, p.y, ['#ff0000','#ff6600'], 6);
+      addScreenShake(2.4, 6);
     }
     // player stomps
     if (p.vy>0 && p.y+32>e.y-10 && p.y+32<e.y+10 && Math.abs(p.x-e.x)<22){
@@ -943,6 +1025,7 @@ function updateBoss() {
   if (p.invincible===0 && Math.abs(p.x-b.x)<36 && Math.abs((p.y+16)-(b.y+20))<36){
     p.hp=Math.max(0,p.hp-1); p.invincible=80; p.hurtTimer=24; p.vy=-6;
     spawnParticles(p.x, p.y, ['#ff0000','#aa0000'], 6);
+    addScreenShake(3.2, 7);
   }
   // player stomps boss
   if (p.vy>0 && p.y+32>b.y-4 && p.y+32<b.y+10 && Math.abs(p.x-b.x)<36){
@@ -998,9 +1081,12 @@ function loop() {
   updateEnemies();
   updateBoss();
   updateParticles();
+  updateScreenShake();
   checkLevelComplete();
 
   ctx.clearRect(0,0,W,H);
+  ctx.save();
+  ctx.translate(screenShake.x, screenShake.y);
   drawWorld();
   state.gems.forEach(drawGem);
   state.bullets.forEach(drawBullet);
@@ -1017,6 +1103,7 @@ function loop() {
     state.player.gunFlash
   );
   drawParticles();
+  ctx.restore();
   drawHUD();
 
   Object.keys(keys).forEach(k => { prevKeys[k] = keys[k]; });
