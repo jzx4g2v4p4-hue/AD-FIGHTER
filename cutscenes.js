@@ -15,7 +15,13 @@ function paintScene(canvas, sceneId, frame) {
     case 'intro_mirror':    drawMirror(ctx, W, H, frame);    break;
     case 'intro_door':      drawDoor(ctx, W, H, frame);      break;
     case 'level1_trans':    drawCityDawn(ctx, W, H, frame);  break;
+    case 'pov_roxie':       drawPovRoxie(ctx, W, H, frame);  break;
+    case 'pov_charly':      drawPovCharly(ctx, W, H, frame); break;
     case 'level2_trans':    drawCrowdScene(ctx, W, H, frame);break;
+    case 'pov_jules':       drawPovJules(ctx, W, H, frame);  break;
+    case 'pov_jairo':       drawPovJairo(ctx, W, H, frame);  break;
+    case 'pov_chris':       drawPovChris(ctx, W, H, frame);  break;
+    case 'pov_marco':       drawPovMarco(ctx, W, H, frame);  break;
     case 'boss_intro':      drawBossIntro(ctx, W, H, frame); break;
     case 'victory':         drawVictory(ctx, W, H, frame);   break;
     default:                drawDefault(ctx, W, H, frame);   break;
@@ -189,6 +195,90 @@ function drawCrowdScene(ctx, W, H, f) {
   ctx.globalAlpha=1;
 }
 
+function drawPOVBase(ctx, W, H, f, characterName, shirtColor, speechColor) {
+  const pulse = Math.sin(f * 0.08) * 0.05 + 0.08;
+  // painterly dusk background blocks for pseudo-real pixel look
+  for (let y=0; y<H; y+=12) {
+    const shade = 20 + Math.floor((y/H) * 45);
+    ctx.fillStyle=`rgb(${shade-8},${shade+10},${shade})`;
+    ctx.fillRect(0, y, W, 12);
+  }
+  for (let i=0;i<8;i++){
+    const tx=(i*85 + (f*0.3)%W)%W;
+    ctx.fillStyle='rgba(18,55,25,0.35)';
+    ctx.fillRect(tx, 40, 24, H-68);
+    ctx.fillRect(tx-8, 60, 40, 16);
+  }
+  // over-shoulder POV (left foreground)
+  ctx.fillStyle='#7a4a2a'; ctx.fillRect(24,H-102,62,84);
+  ctx.fillStyle='#d6a370'; ctx.fillRect(16,H-72,44,42);
+  ctx.fillStyle='#f4ba7f'; ctx.fillRect(14,H-60,22,32);
+  ctx.fillStyle='#ffb54d'; ctx.fillRect(42,H-96,30,30); // hair block
+  // target character right-midground
+  const tx = W - 118;
+  const ty = H - 104 + Math.sin(f*0.09)*2;
+  ctx.fillStyle='#6d3f24'; ctx.fillRect(tx, ty, 66, 86);
+  ctx.fillStyle=shirtColor; ctx.fillRect(tx+8, ty+32, 50, 30);
+  ctx.fillStyle='#d6a370'; ctx.fillRect(tx+20, ty+10, 24, 24);
+  // cinematic bars
+  ctx.fillStyle='rgba(0,0,0,0.35)'; ctx.fillRect(0,0,W,14); ctx.fillRect(0,H-14,W,14);
+  // dialogue panel
+  ctx.fillStyle=`rgba(0,0,0,${0.5+pulse})`; ctx.fillRect(74,20,W-148,56);
+  ctx.strokeStyle=speechColor; ctx.lineWidth=2; ctx.strokeRect(74,20,W-148,56);
+  ctx.fillStyle=speechColor; ctx.font='bold 12px monospace'; ctx.textAlign='center';
+  ctx.fillText(characterName, W/2, 39);
+}
+
+function drawPovRoxie(ctx, W, H, f) {
+  drawPOVBase(ctx, W, H, f, 'ROXIE', '#36d1ff', '#7fe9ff');
+  ctx.fillStyle='#b8f7ff'; ctx.font='11px monospace'; ctx.textAlign='center';
+  ctx.fillText('"You are not late to your own life."', W/2, 63);
+}
+
+function drawPovCharly(ctx, W, H, f) {
+  drawPOVBase(ctx, W, H, f, 'CHARLY', '#9ec5ff', '#d9e9ff');
+  // glasses + taller silhouette
+  const tx = W - 118;
+  const ty = H - 104 + Math.sin(f*0.09)*2;
+  ctx.fillStyle='#222'; ctx.fillRect(tx+18,ty+18,8,2); ctx.fillRect(tx+30,ty+18,8,2); ctx.fillRect(tx+26,ty+18,4,2);
+  ctx.fillStyle='#d9e9ff'; ctx.font='11px monospace'; ctx.textAlign='center';
+  ctx.fillText('"I believe in you. You are always in my heart."', W/2, 60);
+}
+
+function drawPovJules(ctx, W, H, f) {
+  drawPOVBase(ctx, W, H, f, 'JULES', '#ff7e9f', '#ffc7d8');
+  ctx.fillStyle='#ffdbe7'; ctx.font='11px monospace'; ctx.textAlign='center';
+  ctx.fillText('"Breathe. Aim true. Your story is valid."', W/2, 63);
+}
+
+function drawPovJairo(ctx, W, H, f) {
+  drawPOVBase(ctx, W, H, f, 'JAIRO', '#ffcf6a', '#ffe7b3');
+  // hat + beard accents
+  const tx = W - 118;
+  const ty = H - 104 + Math.sin(f*0.09)*2;
+  ctx.fillStyle='#5b3a12'; ctx.fillRect(tx+14,ty+7,30,6);
+  ctx.fillStyle='#2d1b08'; ctx.fillRect(tx+20,ty+26,18,8);
+  ctx.fillStyle='#fff0cc'; ctx.font='11px monospace'; ctx.textAlign='center';
+  ctx.fillText('"You are seen, querido. Keep that fire."', W/2, 60);
+}
+
+function drawPovChris(ctx, W, H, f) {
+  drawPOVBase(ctx, W, H, f, 'CHRIS', '#89f2c4', '#d6ffe8');
+  // ex-military patch + bigger beard accent
+  const tx = W - 118;
+  const ty = H - 104 + Math.sin(f*0.09)*2;
+  ctx.fillStyle='#335f44'; ctx.fillRect(tx+6,ty+36,9,9);
+  ctx.fillStyle='#2b1b10'; ctx.fillRect(tx+18,ty+26,18,9);
+  ctx.fillStyle='#e3fff2'; ctx.font='11px monospace'; ctx.textAlign='center';
+  ctx.fillText('"You got this, brother. Laugh and move."', W/2, 60);
+}
+
+function drawPovMarco(ctx, W, H, f) {
+  drawPOVBase(ctx, W, H, f, 'MARCO', '#90ff90', '#d4ffd4');
+  ctx.fillStyle='#e8ffe8'; ctx.font='11px monospace'; ctx.textAlign='center';
+  ctx.fillText('"We got your six, Greg. Keep moving."', W/2, 63);
+}
+
 function drawBossIntro(ctx, W, H, f) {
   ctx.fillStyle='#1a0000'; ctx.fillRect(0,0,W,H);
   // red sky streaks
@@ -301,27 +391,88 @@ const CUTSCENES = {
         "The city stretches ahead, vast and uncertain.",
         "But something feels different now. Lighter. Greg keeps walking."
       ]
+    },
+    {
+      scene: 'pov_roxie',
+      title: 'POV: Roxie At The Corner Cafe',
+      lines: [
+        "From Greg's POV, Roxie leans over the counter and grins.",
+        "\"You're not broken,\" she says. \"You're becoming.\"",
+        "Greg nods. He checks his Glock, breathes, and heads back into the street."
+      ]
+    },
+    {
+      scene: 'pov_charly',
+      title: 'POV: Charly\'s Promise',
+      lines: [
+        "Charly — tall, slim, glasses catching the streetlight — wraps Greg in a steady hug.",
+        "Their marriage was a cover, but their bond is real and deep.",
+        "\"I believe in you,\" Charly says. \"You will always be in my heart.\""
+      ]
     }
   ],
 
-  // Between Level 2 and Level 3 (Boss)
+  // Between Level 2 and Level 3
   after_level2: [
     {
       scene: 'level2_trans',
       title: 'Finding His People',
       lines: [
         "Greg finds them — people who cheer, who wave flags, who know what it means to arrive.",
-        "But there is one last obstacle. The hardest one.",
-        "The part of himself that still whispers: \"Are you sure you deserve this?\""
+        "For the first time, Greg feels the city answering back with love.",
+        "Still, stray doubts keep rushing him from the edges.",
+        "He keeps moving: one block, one breath, one burst at a time."
+      ]
+    }
+  ],
+
+  after_level3: [
+    {
+      scene: 'pov_jules',
+      title: 'POV: Jules Checks In',
+      lines: [
+        "Greg spots Jules waiting beneath a train sign, calm as ever.",
+        "\"You're doing it,\" Jules says. \"Every step is proof.\"",
+        "Greg tightens his grip and keeps pushing toward the parade route."
+      ]
+    },
+    {
+      scene: 'pov_jairo',
+      title: 'POV: Jairo Steps In',
+      lines: [
+        "Jairo Short appears — buff, bearded, Latino, hat tilted low and confident smile ready.",
+        "\"Come here,\" Jairo says, touching Greg's shoulder. \"You don't fight alone.\"",
+        "Greg feels his chest open. This love is brave, loud, and real."
+      ]
+    },
+    {
+      scene: 'pov_chris',
+      title: 'POV: Chris Brings The Laugh',
+      lines: [
+        "Chris arrives, ex-military and goofy, long beard bouncing as he jogs in.",
+        "\"Tactical plan: be yourself and wreck doubt,\" Chris jokes.",
+        "Greg laughs out loud. Then he reloads and charges forward with both men beside him."
+      ]
+    }
+  ],
+
+  after_level4: [
+    {
+      scene: 'pov_marco',
+      title: 'POV: Marco Joins The Push',
+      lines: [
+        "Music thumps from a distant block party as Marco jogs up beside Greg.",
+        "\"No more hiding,\" Marco says. \"Let's clear this last street together.\"",
+        "Charly, Jairo, and Chris stand behind him — chosen family and true love all in one frame."
       ]
     },
     {
       scene: 'boss_intro',
-      title: 'The Shame Boss Rises',
+      title: 'Final Approach',
       lines: [
-        "SHAME. The heaviest word Greg ever carried.",
-        "It takes the form of every doubt, every cringe, every time he made himself small.",
-        "\"You'll have to go through me,\" it snarls. Greg squares his shoulders. \"Gladly.\""
+        "The sky burns red as SHAME gathers for one last stand.",
+        "Greg hears every ally in his mind: Charly, Jairo, Chris, Roxie, Jules, Marco — and his own voice, strongest of all.",
+        "He chambers a round, steps forward, and chooses himself."
       ]
     }
   ],
@@ -334,8 +485,8 @@ const CUTSCENES = {
       lines: [
         "The Shame Boss shatters into a thousand pieces of light.",
         "Greg stands tall — mohawk blazing, beard fierce, heart open.",
-        "He is not perfect. He is not finished. But he is FREE.",
-        "Greg Mills is a proud gay man, and the world is lucky to know him."
+        "Charly smiles with tears in her eyes while Jairo and Chris pull Greg into a laughing embrace.",
+        "He is not perfect. He is not finished. But he is FREE — and deeply loved."
       ]
     }
   ]
