@@ -272,6 +272,7 @@ let currentLevel = 0;
 let frame = 0;
 let gamePhase = 'start'; // 'start' | 'cutscene' | 'playing' | 'won'
 let cutscenePlayer = null;
+const touchPointerMap = new Map();
 
 // ---- INIT ----
 function initLevel(li) {
@@ -324,6 +325,55 @@ function initLevel(li) {
 }
 
 // ---- START FLOW ----
+function setTouchControlsEnabled(enabled) {
+  const tc = document.getElementById('touchControls');
+  if (!tc) return;
+  tc.classList.toggle('enabled', !!enabled);
+}
+
+function bindTouchControls() {
+  const tc = document.getElementById('touchControls');
+  if (!tc) return;
+  const resetTouchState = () => {
+    touchPointerMap.clear();
+    tc.querySelectorAll('.touch-btn.active').forEach(btn => btn.classList.remove('active'));
+    ['ArrowLeft', 'ArrowRight', 'Space', 'KeyJ', 'KeyL'].forEach(k => { keys[k] = false; });
+  };
+
+  const releasePointer = pointerId => {
+    const info = touchPointerMap.get(pointerId);
+    if (!info) return;
+    if (info.key) keys[info.key] = false;
+    if (info.btn) info.btn.classList.remove('active');
+    touchPointerMap.delete(pointerId);
+  };
+
+  tc.querySelectorAll('.touch-btn[data-key]').forEach(btn => {
+    const key = btn.dataset.key;
+    btn.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      btn.setPointerCapture(e.pointerId);
+      keys[key] = true;
+      btn.classList.add('active');
+      touchPointerMap.set(e.pointerId, { key, btn });
+    });
+
+    const endPress = e => {
+      e.preventDefault();
+      releasePointer(e.pointerId);
+    };
+
+    btn.addEventListener('pointerup', endPress);
+    btn.addEventListener('pointercancel', endPress);
+    btn.addEventListener('pointerleave', e => {
+      if (!btn.hasPointerCapture(e.pointerId)) return;
+      endPress(e);
+    });
+  });
+
+  window.addEventListener('blur', resetTouchState);
+}
+
 function buildStartScreen() {
   const gc = document.getElementById('gameContainer');
   const s = document.createElement('div');
@@ -333,13 +383,14 @@ function buildStartScreen() {
     <div class="pixel-sub">a journey to self-acceptance</div>
     <div class="rainbow-bar">${PRIDE_COLS.map(c=>`<div style="background:${c}"></div>`).join('')}</div>
     <button class="start-btn" id="startBtn">PRESS START</button>
-    <div class="controls">Arrow Keys / WASD — Move &amp; Jump &nbsp;|&nbsp; Space — Jump &nbsp;|&nbsp; J / K / X — Fire &nbsp;|&nbsp; L — Bomb<br>Metal-Slug energy: bullets, bombs, and full action across every mission</div>
+    <div class="controls">Keyboard: Arrow Keys / WASD Move, Space Jump, J / K / X Fire, L Bomb<br>iPhone / iPad: on-screen buttons + Safari-friendly full-screen layout</div>
   `;
   gc.appendChild(s);
   document.getElementById('startBtn').addEventListener('click', beginGame);
 }
 
 function buildWinScreen() {
+  setTouchControlsEnabled(false);
   const gc = document.getElementById('gameContainer');
   const w = document.createElement('div');
   w.id = 'winScreen';
@@ -361,6 +412,7 @@ function buildWinScreen() {
 }
 
 function beginGame() {
+  setTouchControlsEnabled(true);
   const ss = document.getElementById('startScreen');
   if (ss) ss.remove();
   currentLevel = 0;
@@ -1114,3 +1166,4 @@ function loop() {
 // ---- KICK OFF ----
 initSpriteAssets();
 buildStartScreen();
+bindTouchControls();
