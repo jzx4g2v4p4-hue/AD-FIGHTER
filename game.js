@@ -272,6 +272,7 @@ let currentLevel = 0;
 let frame = 0;
 let gamePhase = 'start'; // 'start' | 'cutscene' | 'playing' | 'won'
 let cutscenePlayer = null;
+let campaignScore = 0;
 const touchPointerMap = new Map();
 
 // ---- INIT ----
@@ -314,6 +315,9 @@ function initLevel(li) {
     fireCooldown: 0,
     bombCooldown: 0,
     bombs: 6,
+    score: campaignScore,
+    combo: 0,
+    comboTimer: 0,
     msgTimer:  180,
     msgText:   L.msg,
     levelName: L.name,
@@ -322,6 +326,15 @@ function initLevel(li) {
     complete:  false,
     levelIntroTimer: 90
   };
+}
+
+function awardScore(points, comboable = true) {
+  campaignScore += points;
+  state.score = campaignScore;
+  if (comboable) {
+    state.combo = Math.min(9, state.combo + 1);
+    state.comboTimer = 120;
+  }
 }
 
 // ---- START FLOW ----
@@ -372,6 +385,9 @@ function bindTouchControls() {
   });
 
   window.addEventListener('blur', resetTouchState);
+  document.addEventListener('contextmenu', e => {
+    if (e.target.closest('#touchControls')) e.preventDefault();
+  });
 }
 
 function buildStartScreen() {
@@ -383,7 +399,7 @@ function buildStartScreen() {
     <div class="pixel-sub">a journey to self-acceptance</div>
     <div class="rainbow-bar">${PRIDE_COLS.map(c=>`<div style="background:${c}"></div>`).join('')}</div>
     <button class="start-btn" id="startBtn">PRESS START</button>
-    <div class="controls">Keyboard: Arrow Keys / WASD Move, Space Jump, J / K / X Fire, L Bomb<br>iPhone / iPad: on-screen buttons + Safari-friendly full-screen layout</div>
+    <div class="controls">Keyboard: Arrow Keys / WASD Move, Space Jump, J / K / X Fire, L Bomb<br>iPhone, iPad, and Samsung/Android: on-screen buttons + full-screen layout</div>
   `;
   gc.appendChild(s);
   document.getElementById('startBtn').addEventListener('click', beginGame);
@@ -416,6 +432,7 @@ function beginGame() {
   const ss = document.getElementById('startScreen');
   if (ss) ss.remove();
   currentLevel = 0;
+  campaignScore = 0;
   // Play intro cutscene first
   gamePhase = 'cutscene';
   cutscenePlayer = new CutscenePlayer(() => {
@@ -748,6 +765,13 @@ function drawHUD() {
   ctx.fillStyle='rgba(0,0,0,0.55)'; ctx.fillRect(0,0,W,28);
   ctx.fillStyle='#ff69b4'; ctx.font='bold 13px monospace'; ctx.textAlign='left';
   ctx.fillText('LEVEL '+(state.level+1)+': '+state.levelName, 10, 18);
+  ctx.fillStyle='#ffe38a';
+  ctx.font='bold 12px monospace';
+  ctx.textAlign='right';
+  ctx.fillText(`SCORE ${String(state.score).padStart(6, '0')}`, W - 10, 42);
+  ctx.fillStyle='#9cf6ff';
+  ctx.textAlign='center';
+  ctx.fillText('ARMS • HANDGUN', W/2, 18);
   // hearts
   for (let i=0;i<state.player.maxHp;i++){
     ctx.fillStyle = i < state.player.hp ? '#ff1493' : '#444';
@@ -759,6 +783,18 @@ function drawHUD() {
   ctx.fillStyle='#ffd700'; ctx.font='12px monospace'; ctx.textAlign='left';
   ctx.fillText('★ '+collected+'/'+state.gems.length, 10, 42);
   ctx.fillStyle='#ffb347'; ctx.fillText('BOMBS '+state.bombs, 86, 42);
+  if (state.combo > 1 && state.comboTimer > 0) {
+    ctx.fillStyle='#ff9f33';
+    ctx.font='bold 12px monospace';
+    ctx.textAlign='center';
+    ctx.fillText(`RUSH x${state.combo}`, W/2, 42);
+  }
+  if (Math.floor(frame / 30) % 2 === 0) {
+    ctx.fillStyle='rgba(255,255,255,0.82)';
+    ctx.font='10px monospace';
+    ctx.textAlign='right';
+    ctx.fillText('INSERT COIN', W - 10, H - 10);
+  }
   // message
   if (state.msgTimer > 0){
     const alpha = Math.min(1, state.msgTimer/30);
@@ -845,6 +881,8 @@ function updatePlayer() {
   p.hurtTimer = Math.max(0, p.hurtTimer - 1);
   p.shootTimer = Math.max(0, p.shootTimer - 1);
   p.deadTimer = Math.max(0, p.deadTimer - 1);
+  if (state.comboTimer > 0) state.comboTimer--;
+  else state.combo = 0;
   if (state.fireCooldown>0) state.fireCooldown--;
   p.gunRecoil = Math.max(0, p.gunRecoil - 1);
   p.gunFlash = Math.max(0, p.gunFlash - 1);
@@ -857,6 +895,7 @@ function updatePlayer() {
     if (!g.collected && Math.abs(p.x-g.x)<18 && Math.abs(p.y+16-g.y)<18){
       g.collected=true;
       spawnParticles(g.x, g.y, PRIDE_COLS, 12);
+      awardScore(100, false);
     }
   });
 
@@ -918,6 +957,7 @@ function updateExplosions() {
           e.alive = false;
           e.deadTimer = 20;
           e.vx = 0;
+          awardScore(250);
           spawnParticles(e.x, e.y, PRIDE_COLS, 18);
           spawnSparkBurst(e.x, e.y - 8, (Math.random() > 0.5 ? 1 : -1), 8);
           addScreenShake(2.4, 6);
@@ -931,6 +971,7 @@ function updateExplosions() {
         if (state.boss.hp <= 0) {
           state.boss.alive = false;
           state.boss.deadTimer = 30;
+          awardScore(2000, false);
           spawnParticles(state.boss.x, state.boss.y, PRIDE_COLS, 30);
           addScreenShake(7, 18);
         }
@@ -960,6 +1001,7 @@ function updateBullets() {
           e.alive=false;
           e.deadTimer=20;
           e.vx = 0;
+          awardScore(200);
           spawnParticles(e.x, e.y, PRIDE_COLS, 14);
           addScreenShake(2.2, 6);
         }
@@ -971,6 +1013,7 @@ function updateBullets() {
       const boss = state.boss;
       if (Math.abs(b.x-boss.x)<28 && Math.abs(b.y-(boss.y-12))<30){
         boss.hp--;
+        awardScore(150, false);
         boss.hurtTimer = 12;
         spawnParticles(boss.x, boss.y-10, ['#ff6666','#ff2222','#fff'], 8);
         spawnSparkBurst(boss.x - 12, boss.y - 12, b.dir, 6);
@@ -978,6 +1021,7 @@ function updateBullets() {
         if (boss.hp<=0){
           boss.alive=false;
           boss.deadTimer = 30;
+          awardScore(2000, false);
           spawnParticles(boss.x, boss.y, PRIDE_COLS, 30);
           addScreenShake(7, 18);
         }
@@ -1055,7 +1099,7 @@ function updateEnemies() {
     // player stomps
     if (p.vy>0 && p.y+32>e.y-10 && p.y+32<e.y+10 && Math.abs(p.x-e.x)<22){
       e.hp--; p.vy=-6;
-      if (e.hp<=0){ e.alive=false; e.deadTimer=20; spawnParticles(e.x, e.y, PRIDE_COLS, 14); }
+      if (e.hp<=0){ e.alive=false; e.deadTimer=20; awardScore(220); spawnParticles(e.x, e.y, PRIDE_COLS, 14); }
       else e.hurtTimer = 10;
     }
   });
@@ -1082,8 +1126,9 @@ function updateBoss() {
   // player stomps boss
   if (p.vy>0 && p.y+32>b.y-4 && p.y+32<b.y+10 && Math.abs(p.x-b.x)<36){
     b.hp--; p.vy=-8;
+    awardScore(180, false);
     spawnParticles(b.x, b.y, PRIDE_COLS, 10);
-    if (b.hp<=0){ b.alive=false; b.deadTimer=30; spawnParticles(b.x, b.y, PRIDE_COLS, 30); }
+    if (b.hp<=0){ b.alive=false; b.deadTimer=30; awardScore(2000, false); spawnParticles(b.x, b.y, PRIDE_COLS, 30); }
     else b.hurtTimer = 12;
   }
 }

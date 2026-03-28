@@ -12,6 +12,9 @@ body {
   touch-action: none;
   overscroll-behavior: none;
   padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 #gameContainer {
@@ -270,6 +273,9 @@ canvas {
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .touch-btn.action {
