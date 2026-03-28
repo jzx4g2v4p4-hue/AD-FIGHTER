@@ -20,7 +20,7 @@ const LEVELS = [
     gems:      [[180,240],[350,210],[510,180]],
     enemies:   [{x:250,y:288,dir:1}],
     bossX:     null,
-    msg:       "Collect all gems and defeat the Doubt Demons!",
+    msg:       "Collect all gems and blast the Doubt Demons!",
     afterCutscene: 'after_level1'
   },
   {
@@ -42,7 +42,7 @@ const LEVELS = [
     gems:      [[145,220],[305,180],[485,220]],
     enemies:   [],
     bossX:     520,
-    msg:       "Defeat the Shame Boss — stomp it to win!",
+    msg:       "Defeat the Shame Boss — shoot your doubts away!",
     afterCutscene: 'victory'
   }
 ];
@@ -51,7 +51,7 @@ const LEVELS = [
 const keys = {};
 document.addEventListener('keydown', e => {
   keys[e.code] = true;
-  if (['Space','ArrowUp','ArrowLeft','ArrowRight','ArrowDown'].includes(e.code)) e.preventDefault();
+  if (['Space','ArrowUp','ArrowLeft','ArrowRight','ArrowDown','KeyJ','KeyK','KeyX'].includes(e.code)) e.preventDefault();
 });
 document.addEventListener('keyup', e => { keys[e.code] = false; });
 
@@ -71,7 +71,9 @@ function initLevel(li) {
     gems:     L.gems.map(g => ({ x:g[0], y:g[1], collected:false })),
     enemies:  L.enemies.map(e => ({ x:e.x, y:e.y, dir:e.dir, vx:1.2*e.dir, alive:true, hp:2 })),
     boss:     L.bossX ? { x:L.bossX, y:220, hp:8, maxHp:8, dir:-1, alive:true, atkTimer:0 } : null,
+    bullets:  [],
     particles: [],
+    fireCooldown: 0,
     msgTimer:  180,
     msgText:   L.msg,
     levelName: L.name,
@@ -91,7 +93,7 @@ function buildStartScreen() {
     <div class="pixel-sub">a journey to self-acceptance</div>
     <div class="rainbow-bar">${PRIDE_COLS.map(c=>`<div style="background:${c}"></div>`).join('')}</div>
     <button class="start-btn" id="startBtn">PRESS START</button>
-    <div class="controls">Arrow Keys / WASD — Move &amp; Jump &nbsp;|&nbsp; Space — Jump<br>Stomp enemies from above to defeat them</div>
+    <div class="controls">Arrow Keys / WASD — Move &amp; Jump &nbsp;|&nbsp; Space — Jump &nbsp;|&nbsp; J / X — Fire<br>Metal-Slug style: blast your doubts or stomp them from above</div>
   `;
   gc.appendChild(s);
   document.getElementById('startBtn').addEventListener('click', beginGame);
@@ -149,6 +151,9 @@ function drawGreg(x, y, facing, invincible) {
   ctx.fillStyle='#ff69b4'; ctx.fillRect(-8,2,16,12);
   // arms
   ctx.fillStyle='#c68642'; ctx.fillRect(-12,2,5,10); ctx.fillRect(8,2,5,10);
+  // blaster
+  ctx.fillStyle='#333'; ctx.fillRect(11,8,8,4);
+  ctx.fillStyle='#999'; ctx.fillRect(19,9,3,2);
   // head
   ctx.fillStyle='#c68642'; ctx.fillRect(-6,-10,13,14);
   // beard
@@ -213,6 +218,14 @@ function drawGem(g) {
   ctx.fillStyle=PRIDE_COLS[(ri+1)%6];  ctx.fillRect(x-7,y-4,14,4);
   ctx.fillStyle=PRIDE_COLS[(ri+2)%6];  ctx.fillRect(x-5,y,  10,4);
   ctx.fillStyle='#fff'; ctx.fillRect(x-1,y-10,2,2); ctx.fillRect(x+5,y-4,2,2);
+  ctx.restore();
+}
+
+function drawBullet(b) {
+  const x = Math.round(b.x - state.camX), y = Math.round(b.y);
+  ctx.save();
+  ctx.fillStyle='#ffee66'; ctx.fillRect(x-3,y-1,6,2);
+  ctx.fillStyle='#fff'; ctx.fillRect(x+2*b.dir,y-1,2,2);
   ctx.restore();
 }
 
@@ -327,6 +340,7 @@ function updatePlayer() {
   if (p.x>state.worldW-20) p.x=state.worldW-20;
   if (p.y>H+50){ p.hp=Math.max(0,p.hp-1); p.x=60; p.y=260; p.vy=0; p.invincible=60; }
   if (p.invincible>0) p.invincible--;
+  if (state.fireCooldown>0) state.fireCooldown--;
 
   // camera
   state.camX = Math.max(0, Math.min(state.worldW-W, p.x-W*0.4));
@@ -340,6 +354,62 @@ function updatePlayer() {
   });
 
   if (p.hp<=0) initLevel(state.level);
+}
+
+function fireShot() {
+  const p = state.player;
+  state.bullets.push({
+    x: p.x + p.facing*15,
+    y: p.y + 10,
+    vx: p.facing*7,
+    dir: p.facing,
+    life: 70
+  });
+  spawnParticles(p.x+p.facing*16, p.y+10, ['#fff799','#ff8c00','#ffd700'], 5);
+}
+
+function updateShooting() {
+  if ((keys['KeyJ']||keys['KeyK']||keys['KeyX']) && state.fireCooldown===0){
+    fireShot();
+    state.fireCooldown = 11;
+  }
+}
+
+function updateBullets() {
+  state.bullets = state.bullets.filter(b=>{
+    b.x+=b.vx;
+    b.life--;
+    if (b.life<=0 || b.x<0 || b.x>state.worldW) return false;
+    let hit = false;
+
+    state.enemies.forEach(e=>{
+      if (!e.alive || hit) return;
+      if (Math.abs(b.x-e.x)<16 && Math.abs(b.y-(e.y-8))<16){
+        e.hp--;
+        spawnParticles(e.x, e.y-8, ['#ff66ff','#9966ff','#fff'], 8);
+        if (e.hp<=0){
+          e.alive=false;
+          spawnParticles(e.x, e.y, PRIDE_COLS, 14);
+        }
+        hit = true;
+      }
+    });
+
+    if (!hit && state.boss && state.boss.alive){
+      const boss = state.boss;
+      if (Math.abs(b.x-boss.x)<28 && Math.abs(b.y-(boss.y-12))<30){
+        boss.hp--;
+        spawnParticles(boss.x, boss.y-10, ['#ff6666','#ff2222','#fff'], 8);
+        if (boss.hp<=0){
+          boss.alive=false;
+          spawnParticles(boss.x, boss.y, PRIDE_COLS, 30);
+        }
+        hit = true;
+      }
+    }
+
+    return !hit;
+  });
 }
 
 function updateEnemies() {
@@ -416,6 +486,8 @@ function loop() {
   if (gamePhase !== 'playing') return;
   frame++;
   updatePlayer();
+  updateShooting();
+  updateBullets();
   updateEnemies();
   updateBoss();
   updateParticles();
@@ -424,6 +496,7 @@ function loop() {
   ctx.clearRect(0,0,W,H);
   drawWorld();
   state.gems.forEach(drawGem);
+  state.bullets.forEach(drawBullet);
   state.enemies.forEach(drawEnemy);
   if (state.boss) drawBoss(state.boss);
   drawGreg(state.player.x-state.camX, state.player.y, state.player.facing, state.player.invincible);

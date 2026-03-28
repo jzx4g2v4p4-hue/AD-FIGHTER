@@ -312,7 +312,8 @@ const CUTSCENES = {
       lines: [
         "Greg finds them — people who cheer, who wave flags, who know what it means to arrive.",
         "But there is one last obstacle. The hardest one.",
-        "The part of himself that still whispers: \"Are you sure you deserve this?\""
+        "The part of himself that still whispers: \"Are you sure you deserve this?\"",
+        "Greg locks in, grips his blaster, and decides those doubts are going down."
       ]
     },
     {
@@ -321,7 +322,8 @@ const CUTSCENES = {
       lines: [
         "SHAME. The heaviest word Greg ever carried.",
         "It takes the form of every doubt, every cringe, every time he made himself small.",
-        "\"You'll have to go through me,\" it snarls. Greg squares his shoulders. \"Gladly.\""
+        "\"You'll have to go through me,\" it snarls. Greg squares his shoulders. \"Gladly.\"",
+        "This is his Metal-Slug moment: run forward, fire bright, and never look back."
       ]
     }
   ],
