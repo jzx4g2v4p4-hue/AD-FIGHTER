@@ -16,10 +16,11 @@ const SPRITES = {
   player: {
     key: 'player',
     src: 'assets/sprites/player_sheet.png',
-    frameWidth: 48,
-    frameHeight: 48,
-    originX: 24,
-    originY: 42,
+    frameWidth: 128,
+    frameHeight: 128,
+    originX: 64,
+    originY: 110,
+    displayScale: 0.5,
     states: {
       idle:  { row: 0, frames: 4, speed: 8, loop: true },
       run:   { row: 1, frames: 8, speed: 4, loop: true },
@@ -128,6 +129,11 @@ function drawSpriteFrame(spriteKey, animState, worldX, worldY, facing = 1, alpha
   const stateMeta = cfg.states[animState.state] || cfg.states.idle;
   const fw = cfg.frameWidth;
   const fh = cfg.frameHeight;
+  const scale = cfg.displayScale ?? 1;
+  const dw = fw * scale;
+  const dh = fh * scale;
+  const ox = cfg.originX * scale;
+  const oy = cfg.originY * scale;
   const sx = animState.frame * fw;
   const sy = stateMeta.row * fh;
   const screenX = Math.round(worldX - state.camX);
@@ -140,7 +146,7 @@ function drawSpriteFrame(spriteKey, animState, worldX, worldY, facing = 1, alpha
   ctx.drawImage(
     asset.image,
     sx, sy, fw, fh,
-    -cfg.originX, -cfg.originY, fw, fh
+    -ox, -oy, dw, dh
   );
   ctx.restore();
   return true;
