@@ -15,7 +15,10 @@ function paintScene(canvas, sceneId, frame) {
     case 'intro_mirror':    drawMirror(ctx, W, H, frame);    break;
     case 'intro_door':      drawDoor(ctx, W, H, frame);      break;
     case 'level1_trans':    drawCityDawn(ctx, W, H, frame);  break;
+    case 'pov_roxie':       drawPovRoxie(ctx, W, H, frame);  break;
     case 'level2_trans':    drawCrowdScene(ctx, W, H, frame);break;
+    case 'pov_jules':       drawPovJules(ctx, W, H, frame);  break;
+    case 'pov_marco':       drawPovMarco(ctx, W, H, frame);  break;
     case 'boss_intro':      drawBossIntro(ctx, W, H, frame); break;
     case 'victory':         drawVictory(ctx, W, H, frame);   break;
     default:                drawDefault(ctx, W, H, frame);   break;
@@ -189,6 +192,44 @@ function drawCrowdScene(ctx, W, H, f) {
   ctx.globalAlpha=1;
 }
 
+function drawPOVBase(ctx, W, H, f, characterName, shirtColor, speechColor) {
+  const pulse = Math.sin(f * 0.08) * 0.04 + 0.08;
+  ctx.fillStyle='#101a34'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(255,255,255,0.05)'; ctx.fillRect(0,0,W,80);
+  // first person hands (Greg POV)
+  ctx.fillStyle='#c68642'; ctx.fillRect(W/2-70,H-46,34,18);
+  ctx.fillStyle='#c68642'; ctx.fillRect(W/2+36,H-46,34,18);
+  // camera vignette
+  ctx.fillStyle='rgba(0,0,0,0.35)';
+  ctx.fillRect(0,0,W,12); ctx.fillRect(0,H-12,W,12); ctx.fillRect(0,0,12,H); ctx.fillRect(W-12,0,12,H);
+  // character
+  drawGreg8bit(ctx, W/2, H-84 + Math.sin(f*0.1)*2, 1.45, 1);
+  ctx.fillStyle=shirtColor; ctx.fillRect(W/2-11,H-96,22,15);
+  // dialogue bubble
+  ctx.fillStyle=`rgba(0,0,0,${0.45+pulse})`; ctx.fillRect(W/2-140,26,280,54);
+  ctx.strokeStyle=speechColor; ctx.lineWidth=2; ctx.strokeRect(W/2-140,26,280,54);
+  ctx.fillStyle=speechColor; ctx.font='bold 12px monospace'; ctx.textAlign='center';
+  ctx.fillText(characterName, W/2, 43);
+}
+
+function drawPovRoxie(ctx, W, H, f) {
+  drawPOVBase(ctx, W, H, f, 'ROXIE', '#36d1ff', '#7fe9ff');
+  ctx.fillStyle='#b8f7ff'; ctx.font='11px monospace'; ctx.textAlign='center';
+  ctx.fillText('"You are not late to your own life."', W/2, 63);
+}
+
+function drawPovJules(ctx, W, H, f) {
+  drawPOVBase(ctx, W, H, f, 'JULES', '#ff7e9f', '#ffc7d8');
+  ctx.fillStyle='#ffdbe7'; ctx.font='11px monospace'; ctx.textAlign='center';
+  ctx.fillText('"Breathe. Aim true. Your story is valid."', W/2, 63);
+}
+
+function drawPovMarco(ctx, W, H, f) {
+  drawPOVBase(ctx, W, H, f, 'MARCO', '#90ff90', '#d4ffd4');
+  ctx.fillStyle='#e8ffe8'; ctx.font='11px monospace'; ctx.textAlign='center';
+  ctx.fillText('"We got your six, Greg. Keep moving."', W/2, 63);
+}
+
 function drawBossIntro(ctx, W, H, f) {
   ctx.fillStyle='#1a0000'; ctx.fillRect(0,0,W,H);
   // red sky streaks
@@ -301,27 +342,61 @@ const CUTSCENES = {
         "The city stretches ahead, vast and uncertain.",
         "But something feels different now. Lighter. Greg keeps walking."
       ]
+    },
+    {
+      scene: 'pov_roxie',
+      title: 'POV: Roxie At The Corner Cafe',
+      lines: [
+        "From Greg's POV, Roxie leans over the counter and grins.",
+        "\"You're not broken,\" she says. \"You're becoming.\"",
+        "Greg nods. He checks his Glock, breathes, and heads back into the street."
+      ]
     }
   ],
 
-  // Between Level 2 and Level 3 (Boss)
+  // Between Level 2 and Level 3
   after_level2: [
     {
       scene: 'level2_trans',
       title: 'Finding His People',
       lines: [
         "Greg finds them — people who cheer, who wave flags, who know what it means to arrive.",
-        "But there is one last obstacle. The hardest one.",
-        "The part of himself that still whispers: \"Are you sure you deserve this?\""
+        "For the first time, Greg feels the city answering back with love.",
+        "Still, stray doubts keep rushing him from the edges.",
+        "He keeps moving: one block, one breath, one burst at a time."
+      ]
+    }
+  ],
+
+  after_level3: [
+    {
+      scene: 'pov_jules',
+      title: 'POV: Jules Checks In',
+      lines: [
+        "Greg spots Jules waiting beneath a train sign, calm as ever.",
+        "\"You're doing it,\" Jules says. \"Every step is proof.\"",
+        "Greg tightens his grip and keeps pushing toward the parade route."
+      ]
+    }
+  ],
+
+  after_level4: [
+    {
+      scene: 'pov_marco',
+      title: 'POV: Marco Joins The Push',
+      lines: [
+        "Music thumps from a distant block party as Marco jogs up beside Greg.",
+        "\"No more hiding,\" Marco says. \"Let's clear this last street together.\"",
+        "Greg smiles. One final level. One final battle against SHAME."
       ]
     },
     {
       scene: 'boss_intro',
-      title: 'The Shame Boss Rises',
+      title: 'Final Approach',
       lines: [
-        "SHAME. The heaviest word Greg ever carried.",
-        "It takes the form of every doubt, every cringe, every time he made himself small.",
-        "\"You'll have to go through me,\" it snarls. Greg squares his shoulders. \"Gladly.\""
+        "The sky burns red as SHAME gathers for one last stand.",
+        "Greg hears every ally in his mind: Roxie, Jules, Marco — and his own voice, strongest of all.",
+        "He chambers a round, steps forward, and chooses himself."
       ]
     }
   ],
