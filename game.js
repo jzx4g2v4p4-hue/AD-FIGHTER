@@ -16,28 +16,55 @@ const LEVELS = [
     name:      "The Quiet Closet",
     bg:        ['#1a0533','#3d0f6b'],
     groundY:   300,
+    worldW:    760,
     platforms: [[150,260,100],[320,230,100],[480,200,100]],
     gems:      [[180,240],[350,210],[510,180]],
-    enemies:   [{x:250,y:288,dir:1}],
+    enemies:   [{x:250,y:288,dir:1},{x:610,y:288,dir:-1}],
     bossX:     null,
     msg:       "Collect all gems and blast the Doubt Demons!",
     afterCutscene: 'after_level1'
   },
   {
-    name:      "The World Outside",
+    name:      "Neon Block",
     bg:        ['#0a1a4d','#1a3a8f'],
     groundY:   300,
-    platforms: [[100,250,80],[240,210,80],[400,170,100],[540,210,80]],
-    gems:      [[120,230],[265,190],[430,150],[565,190]],
-    enemies:   [{x:160,y:288,dir:1},{x:340,y:288,dir:-1}],
+    worldW:    900,
+    platforms: [[100,250,80],[240,210,80],[400,170,100],[540,210,80],[700,180,90]],
+    gems:      [[120,230],[265,190],[430,150],[565,190],[725,160]],
+    enemies:   [{x:160,y:288,dir:1},{x:340,y:288,dir:-1},{x:650,y:288,dir:1}],
     bossX:     null,
-    msg:       "Doubts are following — don't let them catch Greg!",
+    msg:       "Push forward. Keep firing. Doubts don't get the last word.",
     afterCutscene: 'after_level2'
+  },
+  {
+    name:      "Open Streets",
+    bg:        ['#001a14','#00573f'],
+    groundY:   300,
+    worldW:    980,
+    platforms: [[120,250,90],[260,220,100],[430,190,110],[620,230,100],[800,200,100]],
+    gems:      [[145,230],[290,200],[460,170],[645,210],[830,180]],
+    enemies:   [{x:200,y:288,dir:1},{x:390,y:288,dir:-1},{x:560,y:288,dir:1},{x:840,y:288,dir:-1}],
+    bossX:     null,
+    msg:       "Run-and-gun through the noise. You're getting stronger.",
+    afterCutscene: 'after_level3'
+  },
+  {
+    name:      "Parade Route",
+    bg:        ['#14143a','#3f1f6b'],
+    groundY:   300,
+    worldW:    1040,
+    platforms: [[120,245,100],[290,205,95],[450,170,90],[620,215,110],[810,180,90],[940,220,70]],
+    gems:      [[150,225],[320,185],[475,150],[655,195],[835,160],[960,200]],
+    enemies:   [{x:210,y:288,dir:1},{x:370,y:288,dir:-1},{x:540,y:288,dir:1},{x:700,y:288,dir:-1},{x:910,y:288,dir:1}],
+    bossX:     null,
+    msg:       "Friends are near. Clear the path and keep your courage loud.",
+    afterCutscene: 'after_level4'
   },
   {
     name:      "Face Yourself",
     bg:        ['#1a0000','#4d0000'],
     groundY:   300,
+    worldW:    860,
     platforms: [[120,240,90],[280,200,90],[460,240,90]],
     gems:      [[145,220],[305,180],[485,220]],
     enemies:   [],
@@ -49,6 +76,7 @@ const LEVELS = [
 
 // ---- KEYS ----
 const keys = {};
+const prevKeys = {};
 document.addEventListener('keydown', e => {
   keys[e.code] = true;
   if (['Space','ArrowUp','ArrowLeft','ArrowRight','ArrowDown','KeyJ','KeyK','KeyX'].includes(e.code)) e.preventDefault();
@@ -67,9 +95,15 @@ function initLevel(li) {
   const L = LEVELS[li];
   state = {
     level: li,
-    player: { x:60, y:260, vx:0, vy:0, onGround:false, facing:1, hp:3, maxHp:3, invincible:0 },
+    player: {
+      x:60, y:260, vx:0, vy:0, onGround:false, facing:1, hp:3, maxHp:3, invincible:0,
+      coyote: 0, gunRecoil: 0, gunFlash: 0
+    },
     gems:     L.gems.map(g => ({ x:g[0], y:g[1], collected:false })),
-    enemies:  L.enemies.map(e => ({ x:e.x, y:e.y, dir:e.dir, vx:1.2*e.dir, alive:true, hp:2 })),
+    enemies:  L.enemies.map(e => ({
+      x:e.x, y:e.y, dir:e.dir, vx:1.2*e.dir, alive:true, hp:2,
+      minX: Math.max(24, e.x - 95), maxX: Math.min((L.worldW || 700) - 24, e.x + 95)
+    })),
     boss:     L.bossX ? { x:L.bossX, y:220, hp:8, maxHp:8, dir:-1, alive:true, atkTimer:0 } : null,
     bullets:  [],
     particles: [],
@@ -78,7 +112,7 @@ function initLevel(li) {
     msgText:   L.msg,
     levelName: L.name,
     camX:      0,
-    worldW:    700,
+    worldW:    L.worldW || 700,
     complete:  false
   };
 }
@@ -93,7 +127,7 @@ function buildStartScreen() {
     <div class="pixel-sub">a journey to self-acceptance</div>
     <div class="rainbow-bar">${PRIDE_COLS.map(c=>`<div style="background:${c}"></div>`).join('')}</div>
     <button class="start-btn" id="startBtn">PRESS START</button>
-    <div class="controls">Arrow Keys / WASD — Move &amp; Jump &nbsp;|&nbsp; Space — Jump &nbsp;|&nbsp; J / X — Fire<br>Metal-Slug style: blast your doubts or stomp them from above</div>
+    <div class="controls">Arrow Keys / WASD — Move &amp; Jump &nbsp;|&nbsp; Space — Jump &nbsp;|&nbsp; J / K / X — Fire<br>Run-and-gun your doubts, talk to allies in POV cutscenes, and keep advancing</div>
   `;
   gc.appendChild(s);
   document.getElementById('startBtn').addEventListener('click', beginGame);
@@ -135,10 +169,11 @@ function beginGame() {
 }
 
 // ---- DRAW GREG ----
-function drawGreg(x, y, facing, invincible) {
+function drawGreg(x, y, facing, invincible, gunRecoil = 0, gunFlash = 0) {
   if (invincible > 0 && Math.floor(invincible / 4) % 2 === 0) return;
+  const bob = Math.abs(Math.sin(frame * 0.2)) * 1.4;
   ctx.save();
-  ctx.translate(Math.round(x), Math.round(y));
+  ctx.translate(Math.round(x), Math.round(y + bob));
   ctx.scale(facing, 1);
   // boots
   ctx.fillStyle='#3a1a00'; ctx.fillRect(-7,24,7,8); ctx.fillRect(2,24,7,8);
@@ -151,9 +186,16 @@ function drawGreg(x, y, facing, invincible) {
   ctx.fillStyle='#ff69b4'; ctx.fillRect(-8,2,16,12);
   // arms
   ctx.fillStyle='#c68642'; ctx.fillRect(-12,2,5,10); ctx.fillRect(8,2,5,10);
-  // blaster
-  ctx.fillStyle='#333'; ctx.fillRect(11,8,8,4);
-  ctx.fillStyle='#999'; ctx.fillRect(19,9,3,2);
+  // animated Glock-style sidearm + slide recoil
+  const recoil = Math.min(4, gunRecoil);
+  ctx.fillStyle='#101010'; ctx.fillRect(10-recoil,7,11,5);      // slide
+  ctx.fillStyle='#2b2b2b'; ctx.fillRect(10,12,7,4);             // frame
+  ctx.fillStyle='#111'; ctx.fillRect(12,14,3,4);                // grip
+  ctx.fillStyle='#888'; ctx.fillRect(20-recoil,9,4,2);          // barrel
+  if (gunFlash > 0) {
+    ctx.fillStyle='rgba(255,240,120,0.95)'; ctx.fillRect(24,7,4,5);
+    ctx.fillStyle='rgba(255,130,0,0.85)';   ctx.fillRect(28,8,3,3);
+  }
   // head
   ctx.fillStyle='#c68642'; ctx.fillRect(-6,-10,13,14);
   // beard
@@ -241,9 +283,9 @@ function drawWorld() {
     if (frame%60<30||i%3!==0) ctx.fillRect(sx,sy,1.5,1.5);
   }
   // ground
-  ctx.fillStyle='#2d1b00'; ctx.fillRect(0-state.camX%700,L.groundY,state.worldW+W,H);
-  ctx.fillStyle='#1a5c1a'; ctx.fillRect(0-state.camX%700,L.groundY,state.worldW+W,8);
-  for (let i=0;i<6;i++){ctx.fillStyle=PRIDE_COLS[i]; ctx.fillRect(0-state.camX%700,L.groundY+8+i*2,state.worldW+W,2);}
+  ctx.fillStyle='#2d1b00'; ctx.fillRect(0-state.camX%state.worldW,L.groundY,state.worldW+W,H);
+  ctx.fillStyle='#1a5c1a'; ctx.fillRect(0-state.camX%state.worldW,L.groundY,state.worldW+W,8);
+  for (let i=0;i<6;i++){ctx.fillStyle=PRIDE_COLS[i]; ctx.fillRect(0-state.camX%state.worldW,L.groundY+8+i*2,state.worldW+W,2);}
   // platforms
   L.platforms.forEach(([px,py,pw])=>{
     const sx = px - state.camX;
@@ -282,6 +324,14 @@ function drawParticles() {
   ctx.globalAlpha=1;
 }
 
+function justPressed(code) {
+  return !!keys[code] && !prevKeys[code];
+}
+
+function justReleased(code) {
+  return !keys[code] && !!prevKeys[code];
+}
+
 // ---- HUD ----
 function drawHUD() {
   ctx.fillStyle='rgba(0,0,0,0.55)'; ctx.fillRect(0,0,W,28);
@@ -313,20 +363,47 @@ function drawHUD() {
 function updatePlayer() {
   const p = state.player;
   const L = LEVELS[state.level];
-  const speed=3.5, jumpPow=-9, grav=0.4;
+  const maxSpeed = 4.2;
+  const accel = 0.58;
+  const airAccel = 0.33;
+  const friction = 0.8;
+  const grav = 0.42;
+  const jumpPow = -9.2;
+  const movingLeft = keys['ArrowLeft'] || keys['KeyA'];
+  const movingRight = keys['ArrowRight'] || keys['KeyD'];
+  const jumpHeld = keys['Space'] || keys['ArrowUp'] || keys['KeyW'];
+  const jumpTap = justPressed('Space') || justPressed('ArrowUp') || justPressed('KeyW');
+  const jumpRelease = justReleased('Space') || justReleased('ArrowUp') || justReleased('KeyW');
 
-  if (keys['ArrowLeft']||keys['KeyA']){ p.vx=-speed; p.facing=-1; }
-  else if (keys['ArrowRight']||keys['KeyD']){ p.vx=speed; p.facing=1; }
-  else p.vx*=0.8;
+  if (movingLeft && !movingRight) {
+    p.vx -= p.onGround ? accel : airAccel;
+    p.facing = -1;
+  } else if (movingRight && !movingLeft) {
+    p.vx += p.onGround ? accel : airAccel;
+    p.facing = 1;
+  } else {
+    p.vx *= p.onGround ? friction : 0.94;
+  }
+  p.vx = Math.max(-maxSpeed, Math.min(maxSpeed, p.vx));
 
-  if ((keys['Space']||keys['ArrowUp']||keys['KeyW']) && p.onGround){
-    p.vy=jumpPow; p.onGround=false;
+  if (p.onGround) p.coyote = 7;
+  else p.coyote = Math.max(0, p.coyote - 1);
+
+  if (jumpTap && (p.onGround || p.coyote > 0)) {
+    p.vy = jumpPow;
+    p.onGround = false;
+    p.coyote = 0;
   }
 
-  p.vy+=grav; p.x+=p.vx; p.y+=p.vy;
+  if (jumpRelease && p.vy < -3 && !jumpHeld) p.vy *= 0.62;
+
+  p.vy += grav;
+  p.x += p.vx;
+  p.y += p.vy;
 
   // ground
   if (p.y+32>=L.groundY){ p.y=L.groundY-32; p.vy=0; p.onGround=true; }
+  else p.onGround=false;
 
   // platforms
   L.platforms.forEach(([px,py,pw])=>{
@@ -341,6 +418,8 @@ function updatePlayer() {
   if (p.y>H+50){ p.hp=Math.max(0,p.hp-1); p.x=60; p.y=260; p.vy=0; p.invincible=60; }
   if (p.invincible>0) p.invincible--;
   if (state.fireCooldown>0) state.fireCooldown--;
+  p.gunRecoil = Math.max(0, p.gunRecoil - 1);
+  p.gunFlash = Math.max(0, p.gunFlash - 1);
 
   // camera
   state.camX = Math.max(0, Math.min(state.worldW-W, p.x-W*0.4));
@@ -365,7 +444,10 @@ function fireShot() {
     dir: p.facing,
     life: 70
   });
+  p.gunRecoil = 6;
+  p.gunFlash = 3;
   spawnParticles(p.x+p.facing*16, p.y+10, ['#fff799','#ff8c00','#ffd700'], 5);
+  spawnParticles(p.x+p.facing*8, p.y+8, ['#c2a35f','#f0d28a'], 2);
 }
 
 function updateShooting() {
@@ -417,7 +499,7 @@ function updateEnemies() {
   state.enemies.forEach(e=>{
     if (!e.alive) return;
     e.x+=e.vx;
-    if (e.x<30||e.x>state.worldW-30) e.vx*=-1;
+    if (e.x<e.minX||e.x>e.maxX) e.vx*=-1;
     // enemy hits player
     if (p.invincible===0 && Math.abs(p.x-e.x)<20 && Math.abs(p.y+16-e.y)<20){
       p.hp=Math.max(0,p.hp-1); p.invincible=80; p.vy=-5;
@@ -459,9 +541,10 @@ function checkLevelComplete() {
   if (allGems && allEnemies && bossDown){
     state.complete = true;
     const L = LEVELS[state.level];
-    const msg = currentLevel===2 ? "SHAME DEFEATED! Greg is FREE!" :
-                currentLevel===0 ? "Rainbow gems collected! The path opens!" :
-                "Doubts defeated! One final challenge...";
+    const msg = currentLevel===LEVELS.length-1 ? "SHAME DEFEATED! Greg is FREE!" :
+                currentLevel===0 ? "First wall broken. Keep moving forward!" :
+                currentLevel===LEVELS.length-2 ? "One final push. Face yourself." :
+                "Sector clear. Keep running toward your truth.";
     state.msgText=msg; state.msgTimer=180;
 
     setTimeout(()=>{
@@ -499,9 +582,18 @@ function loop() {
   state.bullets.forEach(drawBullet);
   state.enemies.forEach(drawEnemy);
   if (state.boss) drawBoss(state.boss);
-  drawGreg(state.player.x-state.camX, state.player.y, state.player.facing, state.player.invincible);
+  drawGreg(
+    state.player.x-state.camX,
+    state.player.y,
+    state.player.facing,
+    state.player.invincible,
+    state.player.gunRecoil,
+    state.player.gunFlash
+  );
   drawParticles();
   drawHUD();
+
+  Object.keys(keys).forEach(k => { prevKeys[k] = keys[k]; });
 
   requestAnimationFrame(loop);
 }
