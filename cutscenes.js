@@ -24,6 +24,7 @@ function paintScene(canvas, sceneId, frame) {
     case 'pov_marco':       drawPovMarco(ctx, W, H, frame);  break;
     case 'boss_intro':      drawBossIntro(ctx, W, H, frame); break;
     case 'victory':         drawVictory(ctx, W, H, frame);   break;
+    case 'victory_snowball':drawVictorySnowball(ctx, W, H, frame); break;
     default:                drawDefault(ctx, W, H, frame);   break;
   }
 }
@@ -56,6 +57,52 @@ function drawGreg8bit(ctx, x, y, scale=1, facing=1) {
   for(let i=0;i<6;i++){ctx.fillStyle=r[i]; ctx.fillRect(-2,-12-i*3,5,4);}
   // ponytail
   ctx.fillStyle='#5c3a1e'; ctx.fillRect(4,-10,3,14); ctx.fillRect(5,-5,4,3);
+  ctx.restore();
+}
+
+function drawHeroVariant(ctx, x, y, f, opts = {}) {
+  const {
+    facing = 1,
+    scale = 1,
+    shirt = '#2f8f57',
+    pants = '#8a8a50',
+    skin = '#c68642',
+    beard = '#4a2f1a',
+    hair = '#1a1a1a',
+    throwPose = false
+  } = opts;
+  const bob = Math.sin(f * 0.2 + x * 0.01) * 1.3;
+  const stride = Math.sin(f * 0.35 + x * 0.02) * (throwPose ? 0.9 : 2.2);
+  const armSwing = Math.sin(f * 0.4 + x * 0.01) * 2.2;
+  ctx.save();
+  ctx.translate(x, y + bob);
+  ctx.scale(scale * facing, scale);
+  // boots
+  ctx.fillStyle='#2b2b2b'; ctx.fillRect(-8+stride*0.3,24,8,8); ctx.fillRect(1-stride*0.3,24,8,8);
+  // pants
+  ctx.fillStyle=pants; ctx.fillRect(-8,14,16,12);
+  ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fillRect(-8,20,16,6);
+  // shirt + vest
+  ctx.fillStyle=shirt; ctx.fillRect(-9,2,18,12);
+  ctx.fillStyle='rgba(0,0,0,0.25)'; ctx.fillRect(-9,8,18,6);
+  // arms
+  ctx.fillStyle=skin;
+  ctx.fillRect(-13,2+stride*0.2,5,10);
+  ctx.fillRect(8,2-(throwPose ? 4 : stride*0.2)-armSwing*0.2,5,10);
+  // head
+  ctx.fillStyle=skin; ctx.fillRect(-6,-10,13,14);
+  ctx.fillStyle=beard; ctx.fillRect(-6,0,13,6);
+  ctx.fillStyle=hair; ctx.fillRect(-6,-12,13,4);
+  // face details
+  ctx.fillStyle='#000'; ctx.fillRect(-4,-7,3,3); ctx.fillRect(0,-7,3,3);
+  ctx.fillStyle='#ff9999'; ctx.fillRect(-2,-1,6,2);
+  // action: snowball
+  if (throwPose) {
+    ctx.fillStyle='#f2f6ff';
+    ctx.fillRect(11,0,4,4);
+    ctx.fillStyle='rgba(255,255,255,0.5)';
+    ctx.fillRect(14 + Math.sin(f*0.3)*7, -2, 3, 3);
+  }
   ctx.restore();
 }
 
@@ -195,7 +242,55 @@ function drawCrowdScene(ctx, W, H, f) {
   ctx.globalAlpha=1;
 }
 
-function drawPOVBase(ctx, W, H, f, characterName, shirtColor, speechColor) {
+function drawSupportSprite(ctx, x, y, opts = {}) {
+  const {
+    shirtColor = '#9ec5ff',
+    skinColor = '#d6a370',
+    hairColor = '#2b1b08',
+    accentColor = '#ffffff',
+    glasses = false,
+    hat = false,
+    beard = false,
+    longHair = false
+  } = opts;
+  const bob = opts.bob || 0;
+  const blink = Math.sin(opts.frame * 0.08) > 0.82;
+
+  // torso + jacket
+  ctx.fillStyle='#5e3521'; ctx.fillRect(x, y + bob, 68, 86);
+  ctx.fillStyle=shirtColor; ctx.fillRect(x + 9, y + 33 + bob, 50, 34);
+  ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.fillRect(x + 16, y + 36 + bob, 10, 24);
+  // neck + head
+  ctx.fillStyle=skinColor; ctx.fillRect(x + 28, y + 24 + bob, 12, 10);
+  ctx.fillStyle=skinColor; ctx.fillRect(x + 20, y + 10 + bob, 28, 24);
+
+  if (longHair) { ctx.fillStyle=hairColor; ctx.fillRect(x + 16, y + 10 + bob, 36, 24); }
+  if (hat) {
+    ctx.fillStyle=hairColor; ctx.fillRect(x + 16, y + 6 + bob, 36, 7);
+    ctx.fillStyle=accentColor; ctx.fillRect(x + 22, y + 8 + bob, 12, 3);
+  } else {
+    ctx.fillStyle=hairColor; ctx.fillRect(x + 19, y + 7 + bob, 30, 8);
+  }
+
+  ctx.fillStyle='#1d120b'; // eyes
+  if (!blink) {
+    ctx.fillRect(x + 26, y + 20 + bob, 4, 3);
+    ctx.fillRect(x + 38, y + 20 + bob, 4, 3);
+  } else {
+    ctx.fillRect(x + 25, y + 21 + bob, 5, 1);
+    ctx.fillRect(x + 37, y + 21 + bob, 5, 1);
+  }
+  if (glasses) {
+    ctx.fillStyle='#111';
+    ctx.fillRect(x + 24, y + 18 + bob, 7, 5);
+    ctx.fillRect(x + 37, y + 18 + bob, 7, 5);
+    ctx.fillRect(x + 31, y + 19 + bob, 6, 2);
+  }
+  if (beard) { ctx.fillStyle=hairColor; ctx.fillRect(x + 23, y + 28 + bob, 22, 7); }
+  ctx.fillStyle='#c2786b'; ctx.fillRect(x + 30, y + 27 + bob, 8, 2); // mouth
+}
+
+function drawPOVBase(ctx, W, H, f, characterName, shirtColor, speechColor, charOpts = {}) {
   const pulse = Math.sin(f * 0.08) * 0.05 + 0.08;
   // painterly dusk background blocks for pseudo-real pixel look
   for (let y=0; y<H; y+=12) {
@@ -214,12 +309,10 @@ function drawPOVBase(ctx, W, H, f, characterName, shirtColor, speechColor) {
   ctx.fillStyle='#d6a370'; ctx.fillRect(16,H-72,44,42);
   ctx.fillStyle='#f4ba7f'; ctx.fillRect(14,H-60,22,32);
   ctx.fillStyle='#ffb54d'; ctx.fillRect(42,H-96,30,30); // hair block
-  // target character right-midground
+  // target character right-midground (improved sprite detail + idle animation)
   const tx = W - 118;
   const ty = H - 104 + Math.sin(f*0.09)*2;
-  ctx.fillStyle='#6d3f24'; ctx.fillRect(tx, ty, 66, 86);
-  ctx.fillStyle=shirtColor; ctx.fillRect(tx+8, ty+32, 50, 30);
-  ctx.fillStyle='#d6a370'; ctx.fillRect(tx+20, ty+10, 24, 24);
+  drawSupportSprite(ctx, tx, ty, { ...charOpts, shirtColor, frame: f, bob: Math.sin(f * 0.09) * 2 });
   // cinematic bars
   ctx.fillStyle='rgba(0,0,0,0.35)'; ctx.fillRect(0,0,W,14); ctx.fillRect(0,H-14,W,14);
   // dialogue panel
@@ -230,51 +323,64 @@ function drawPOVBase(ctx, W, H, f, characterName, shirtColor, speechColor) {
 }
 
 function drawPovRoxie(ctx, W, H, f) {
-  drawPOVBase(ctx, W, H, f, 'ROXIE', '#36d1ff', '#7fe9ff');
+  drawPOVBase(ctx, W, H, f, 'ROXIE', '#36d1ff', '#7fe9ff', {
+    longHair: true,
+    hairColor: '#ff6db8',
+    accentColor: '#ffd6ef'
+  });
   ctx.fillStyle='#b8f7ff'; ctx.font='11px monospace'; ctx.textAlign='center';
   ctx.fillText('"You are not late to your own life."', W/2, 63);
 }
 
 function drawPovCharly(ctx, W, H, f) {
-  drawPOVBase(ctx, W, H, f, 'CHARLY', '#9ec5ff', '#d9e9ff');
-  // glasses + taller silhouette
-  const tx = W - 118;
-  const ty = H - 104 + Math.sin(f*0.09)*2;
-  ctx.fillStyle='#222'; ctx.fillRect(tx+18,ty+18,8,2); ctx.fillRect(tx+30,ty+18,8,2); ctx.fillRect(tx+26,ty+18,4,2);
+  drawPOVBase(ctx, W, H, f, 'CHARLY', '#9ec5ff', '#d9e9ff', {
+    glasses: true,
+    hairColor: '#2d1f12'
+  });
   ctx.fillStyle='#d9e9ff'; ctx.font='11px monospace'; ctx.textAlign='center';
   ctx.fillText('"I believe in you. You are always in my heart."', W/2, 60);
 }
 
 function drawPovJules(ctx, W, H, f) {
-  drawPOVBase(ctx, W, H, f, 'JULES', '#ff7e9f', '#ffc7d8');
+  drawPOVBase(ctx, W, H, f, 'JULES', '#ff7e9f', '#ffc7d8', {
+    longHair: true,
+    hairColor: '#5f2a8a'
+  });
   ctx.fillStyle='#ffdbe7'; ctx.font='11px monospace'; ctx.textAlign='center';
   ctx.fillText('"Breathe. Aim true. Your story is valid."', W/2, 63);
 }
 
 function drawPovJairo(ctx, W, H, f) {
-  drawPOVBase(ctx, W, H, f, 'JAIRO', '#ffcf6a', '#ffe7b3');
-  // hat + beard accents
-  const tx = W - 118;
-  const ty = H - 104 + Math.sin(f*0.09)*2;
-  ctx.fillStyle='#5b3a12'; ctx.fillRect(tx+14,ty+7,30,6);
-  ctx.fillStyle='#2d1b08'; ctx.fillRect(tx+20,ty+26,18,8);
+  drawPOVBase(ctx, W, H, f, 'JAIRO', '#ffcf6a', '#ffe7b3', {
+    hat: true,
+    beard: true,
+    hairColor: '#2d1b08',
+    accentColor: '#f3d57d'
+  });
   ctx.fillStyle='#fff0cc'; ctx.font='11px monospace'; ctx.textAlign='center';
   ctx.fillText('"You are seen, querido. Keep that fire."', W/2, 60);
 }
 
 function drawPovChris(ctx, W, H, f) {
-  drawPOVBase(ctx, W, H, f, 'CHRIS', '#89f2c4', '#d6ffe8');
+  drawPOVBase(ctx, W, H, f, 'CHRIS', '#89f2c4', '#d6ffe8', {
+    beard: true,
+    hairColor: '#2b1b10'
+  });
   // ex-military patch + bigger beard accent
   const tx = W - 118;
   const ty = H - 104 + Math.sin(f*0.09)*2;
   ctx.fillStyle='#335f44'; ctx.fillRect(tx+6,ty+36,9,9);
-  ctx.fillStyle='#2b1b10'; ctx.fillRect(tx+18,ty+26,18,9);
   ctx.fillStyle='#e3fff2'; ctx.font='11px monospace'; ctx.textAlign='center';
   ctx.fillText('"You got this, brother. Laugh and move."', W/2, 60);
 }
 
 function drawPovMarco(ctx, W, H, f) {
-  drawPOVBase(ctx, W, H, f, 'MARCO', '#90ff90', '#d4ffd4');
+  drawPOVBase(ctx, W, H, f, 'MARCO', '#90ff90', '#d4ffd4', {
+    glasses: true,
+    longHair: true,
+    hairColor: '#1a3e1a',
+    accentColor: '#d9ffd9'
+  });
   ctx.fillStyle='#e8ffe8'; ctx.font='11px monospace'; ctx.textAlign='center';
   ctx.fillText('"We got your six, Greg. Keep moving."', W/2, 63);
 }
@@ -338,6 +444,66 @@ function drawVictory(ctx, W, H, f) {
   ctx.fillStyle='#fff';
   ctx.font='bold 20px monospace'; ctx.textAlign='center';
   ctx.fillText('GREG IS FREE', W/2, 38);
+}
+
+function drawVictorySnowball(ctx, W, H, f) {
+  // winter-night gradient with parallax snow
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#0a1840');
+  g.addColorStop(1, '#1a2755');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle='#f5f8ff';
+  ctx.fillRect(0, H-60, W, 60);
+  for (let i=0;i<64;i++) {
+    const sx = (i*47 + f*1.7 + (i%7)*13) % W;
+    const sy = (i*29 + f*0.95) % (H-40);
+    ctx.fillStyle = i%3===0 ? '#ffffff' : '#dbe8ff';
+    ctx.fillRect(sx, sy, 2, 2);
+  }
+
+  // movement trails for a more arcade / metal-run-and-gun vibe
+  ctx.globalAlpha = 0.25;
+  for (let i=0;i<4;i++) {
+    const y = H - 95 + i * 8;
+    ctx.fillStyle = '#9ec5ff';
+    ctx.fillRect(40, y, W - 80, 2);
+  }
+  ctx.globalAlpha = 1;
+
+  // Greg + Jairo + Chris throwing snowballs at each other
+  drawHeroVariant(ctx, 96, H-74, f, {
+    facing: 1, scale: 1.35, shirt: '#ff5ea8', pants: '#5a6b99', skin: '#c68642', beard: '#5c3a1e', hair: '#232323', throwPose: true
+  });
+  drawHeroVariant(ctx, W/2, H-76, f+20, {
+    facing: -1, scale: 1.45, shirt: '#ffcf6a', pants: '#80864a', skin: '#bf7d42', beard: '#2d1b08', hair: '#2d1b08', throwPose: true
+  });
+  drawHeroVariant(ctx, W-102, H-74, f+40, {
+    facing: -1, scale: 1.4, shirt: '#89f2c4', pants: '#6b8b58', skin: '#b87740', beard: '#2b1b10', hair: '#1b1b1b', throwPose: true
+  });
+
+  // snowball arcs crossing between everyone
+  const t = f * 0.05;
+  const arcs = [
+    { x: 120, y: H-110, dir: 1 },
+    { x: W/2 - 10, y: H-122, dir: -1 },
+    { x: W-130, y: H-108, dir: -1 }
+  ];
+  arcs.forEach((a, idx) => {
+    const px = a.x + Math.sin(t + idx) * 55 * a.dir;
+    const py = a.y - Math.abs(Math.cos(t + idx * 1.4)) * 22;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(px, py, 5, 5);
+    ctx.fillStyle = 'rgba(170,200,255,0.45)';
+    ctx.fillRect(px-4, py+2, 4, 2);
+  });
+
+  ctx.fillStyle='rgba(0,0,0,0.4)';
+  ctx.fillRect(0, 10, W, 42);
+  ctx.fillStyle='#fff';
+  ctx.font='bold 15px monospace';
+  ctx.textAlign='center';
+  ctx.fillText('GREG • JAIRO • CHRIS | PROUD, GAY, AND JOYFULLY CHAOTIC', W/2, 36);
 }
 
 function drawDefault(ctx, W, H, f) {
@@ -487,6 +653,16 @@ const CUTSCENES = {
         "Greg stands tall — mohawk blazing, beard fierce, heart open.",
         "Charly smiles with tears in her eyes while Jairo and Chris pull Greg into a laughing embrace.",
         "He is not perfect. He is not finished. But he is FREE — and deeply loved."
+      ]
+    },
+    {
+      scene: 'victory_snowball',
+      title: 'After The Battle: Snowball Truce',
+      lines: [
+        "Later, Greg, Jairo, and Chris start a wild snowball fight in the street.",
+        "They laugh, duck, and throw like a run-and-gun bonus stage.",
+        "All three are proudly gay for each other — open-hearted, safe, and fully themselves.",
+        "No shame. Just joy, chosen family, and love that keeps showing up."
       ]
     }
   ]
