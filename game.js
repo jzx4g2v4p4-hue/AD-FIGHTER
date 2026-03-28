@@ -675,6 +675,7 @@ function checkLevelComplete() {
           currentLevel++;
           initLevel(currentLevel);
           gamePhase='playing';
+          loop();
         } else {
           gamePhase='won';
           buildWinScreen();
