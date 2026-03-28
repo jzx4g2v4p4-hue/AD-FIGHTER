@@ -308,6 +308,10 @@ function initLevel(li) {
     { x: Math.min(extendedWorldW - 180, 430 + li * 100), y: L.groundY - 34, type: 'chris', collected: false },
     { x: Math.min(extendedWorldW - 105, 600 + li * 110), y: L.groundY - 34, type: 'mark', collected: false }
   ];
+  const prideFlags = [
+    { x: Math.min(extendedWorldW - 300, 330 + li * 90), y: L.groundY - 28, collected: false },
+    { x: Math.min(extendedWorldW - 70, 690 + li * 115), y: L.groundY - 28, collected: false }
+  ];
   screenShake.time = 0;
   screenShake.power = 0;
   screenShake.x = 0;
@@ -346,6 +350,7 @@ function initLevel(li) {
     particles: [],
     trails: [],
     powerups,
+    prideFlags,
     platforms: longPlatforms,
     fireCooldown: 0,
     bombCooldown: 0,
@@ -694,6 +699,27 @@ function drawPowerup(pu) {
   ctx.restore();
 }
 
+function drawPrideFlag(flag) {
+  if (flag.collected) return;
+  const x = Math.round(flag.x - state.camX);
+  const y = Math.round(flag.y + Math.sin((frame + flag.x) * 0.06) * 2);
+  const wave = Math.sin((frame + flag.x) * 0.12) * 2;
+  ctx.save();
+  ctx.fillStyle = '#c8a86b';
+  ctx.fillRect(x - 8, y - 12, 2, 18);
+  for (let i = 0; i < 6; i++) {
+    ctx.fillStyle = PRIDE_COLS[i];
+    ctx.fillRect(x - 6, y - 12 + i * 2, 10 + wave, 2);
+  }
+  ctx.fillStyle = '#ff6fb0';
+  ctx.fillRect(x + 4 + wave, y - 3, 6, 5);
+  ctx.fillStyle = '#fff';
+  ctx.font = '8px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('♥', x + 7 + wave, y + 1);
+  ctx.restore();
+}
+
 function drawBullet(b) {
   const x = Math.round(b.x - state.camX), y = Math.round(b.y);
   const slime = b.type === 'slime';
@@ -802,6 +828,14 @@ function drawWorld() {
     const beamX = ((i * 120) - (state.camX * 0.6) - frame * 1.7) % (W + 100) - 50;
     ctx.fillStyle='rgba(255,180,90,0.06)';
     ctx.fillRect(beamX, 0, 3, H);
+  }
+  // metal-slug style foreground girders
+  for (let i = 0; i < 5; i++) {
+    const gx = ((i * 210) - (state.camX * 0.95)) % (W + 200) - 100;
+    ctx.fillStyle='rgba(12,10,18,0.22)';
+    ctx.fillRect(gx, H - 150, 16, 130);
+    ctx.fillRect(gx + 30, H - 170, 12, 150);
+    ctx.fillRect(gx - 6, H - 168, 52, 4);
   }
   // ground
   ctx.fillStyle='#2d1b00'; ctx.fillRect(0-state.camX%state.worldW,L.groundY,state.worldW+W,H);
@@ -923,9 +957,11 @@ function drawHUD() {
   }
   // gems
   const collected = state.gems.filter(g=>g.collected).length;
+  const flagCount = state.prideFlags.filter(f => f.collected).length;
   ctx.fillStyle='#ffd700'; ctx.font='12px monospace'; ctx.textAlign='left';
   ctx.fillText('★ '+collected+'/'+state.gems.length, 10, 42);
-  ctx.fillStyle='#ffb347'; ctx.fillText('BOMBS '+state.bombs, 86, 42);
+  ctx.fillStyle='#ff95c8'; ctx.fillText('⚑ '+flagCount+'/'+state.prideFlags.length, 76, 42);
+  ctx.fillStyle='#ffb347'; ctx.fillText('BOMBS '+state.bombs, 160, 42);
   if (state.combo > 1 && state.comboTimer > 0) {
     ctx.fillStyle='#ff9f33';
     ctx.font='bold 12px monospace';
@@ -968,12 +1004,12 @@ function updatePlayer() {
   const p = state.player;
   const L = LEVELS[state.level];
   const wasOnGround = p.onGround;
-  const maxSpeed = 4.9;
-  const accel = 0.65;
-  const airAccel = 0.38;
-  const friction = 0.78;
-  const grav = 0.4;
-  const jumpPow = -9.8;
+  const maxSpeed = 5.1;
+  const accel = 0.68;
+  const airAccel = 0.42;
+  const friction = 0.8;
+  const grav = 0.36;
+  const jumpPow = -10.5;
   const movingLeft = keys['ArrowLeft'] || keys['KeyA'];
   const movingRight = keys['ArrowRight'] || keys['KeyD'];
   const jumpHeld = keys['Space'] || keys['ArrowUp'] || keys['KeyW'];
@@ -991,7 +1027,7 @@ function updatePlayer() {
   }
   p.vx = Math.max(-maxSpeed, Math.min(maxSpeed, p.vx));
 
-  if (p.onGround) p.coyote = 7;
+  if (p.onGround) p.coyote = 10;
   else p.coyote = Math.max(0, p.coyote - 1);
 
   if (jumpTap && (p.onGround || p.coyote > 0)) {
@@ -1076,13 +1112,24 @@ function updatePlayer() {
       p.weaponMode = pu.type === 'mark' ? 'rapid' : 'slime';
       p.weaponTimer = pu.type === 'mark' ? 680 : 820;
       state.msgText = pu.type === 'jairo'
-        ? "Jairo boost! Slime cannon online."
+        ? "Greg fulfilled his Courage needs and was granted Jairo's Slime Cannon."
         : pu.type === 'mark'
-          ? "Mark upgrade! Burst mode online."
-          : "Chris boost! Slime cannon online.";
+          ? "Greg fulfilled his Clarity needs and was granted Mark's Burst Upgrade."
+          : "Greg fulfilled his Joy needs and was granted Chris's Slime Cannon.";
       state.msgTimer = 140;
       spawnParticles(pu.x, pu.y, ['#ffffff','#d9e8ff','#ff9fd2'], 16);
       addScreenShake(1.8, 5);
+    }
+  });
+
+  state.prideFlags.forEach(flag => {
+    if (flag.collected) return;
+    if (Math.abs(p.x - flag.x) < 18 && Math.abs((p.y + 16) - flag.y) < 20) {
+      flag.collected = true;
+      p.hp = Math.min(p.maxHp, p.hp + 1);
+      state.msgText = "Greg raised a Pride flag and restored one heart.";
+      state.msgTimer = 110;
+      spawnParticles(flag.x, flag.y, PRIDE_COLS, 14);
     }
   });
 
@@ -1407,6 +1454,7 @@ function loop() {
   drawWorld();
   state.gems.forEach(drawGem);
   state.powerups.forEach(drawPowerup);
+  state.prideFlags.forEach(drawPrideFlag);
   state.bullets.forEach(drawBullet);
   state.enemyShots.forEach(drawEnemyShot);
   drawExplosions();

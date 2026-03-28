@@ -46,10 +46,14 @@ function drawCinematicFX(ctx, W, H, f) {
 }
 
 function drawGreg8bit(ctx, x, y, scale=1, facing=1) {
+  const wobble = Math.sin((x + y) * 0.01 + performance.now() * 0.004) * 1.2;
   ctx.save();
-  ctx.translate(x, y);
+  ctx.translate(x, y + wobble);
   ctx.scale(scale * facing, scale);
   const r = PRIDE;
+  // shadow + chunky outline for metal-slug feel
+  ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(-10,30,22,3);
+  ctx.fillStyle='#1a0f06'; ctx.fillRect(-9,23,20,11);
   // boots
   ctx.fillStyle='#3a1a00'; ctx.fillRect(-7,24,7,8); ctx.fillRect(2,24,7,8);
   // pants
@@ -59,6 +63,7 @@ function drawGreg8bit(ctx, x, y, scale=1, facing=1) {
   ctx.fillStyle='#ffd700'; ctx.fillRect(-2,12,4,4);
   // shirt
   ctx.fillStyle='#ff69b4'; ctx.fillRect(-8,2,16,12);
+  ctx.fillStyle='#ff9fcd'; ctx.fillRect(-5,3,10,3);
   // arms
   ctx.fillStyle='#c68642'; ctx.fillRect(-12,2,5,10); ctx.fillRect(8,2,5,10);
   // head
@@ -73,6 +78,8 @@ function drawGreg8bit(ctx, x, y, scale=1, facing=1) {
   for(let i=0;i<6;i++){ctx.fillStyle=r[i]; ctx.fillRect(-2,-12-i*3,5,4);}
   // ponytail
   ctx.fillStyle='#5c3a1e'; ctx.fillRect(4,-10,3,14); ctx.fillRect(5,-5,4,3);
+  // sidearm silhouette
+  ctx.fillStyle='#111'; ctx.fillRect(11,7,8,4); ctx.fillRect(12,11,3,4);
   ctx.restore();
 }
 
@@ -273,6 +280,7 @@ function drawSupportSprite(ctx, x, y, opts = {}) {
   const blink = Math.sin(opts.frame * 0.08) > 0.82;
 
   // torso + jacket
+  ctx.fillStyle='rgba(0,0,0,0.25)'; ctx.fillRect(x - 2, y + 84 + bob, 72, 4);
   ctx.fillStyle='#5e3521'; ctx.fillRect(x, y + bob, 68, 86);
   ctx.fillStyle=shirtColor; ctx.fillRect(x + 9, y + 33 + bob, 50, 34);
   ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.fillRect(x + 16, y + 36 + bob, 10, 24);
@@ -304,6 +312,10 @@ function drawSupportSprite(ctx, x, y, opts = {}) {
   }
   if (beard) { ctx.fillStyle=hairColor; ctx.fillRect(x + 23, y + 28 + bob, 22, 7); }
   ctx.fillStyle='#c2786b'; ctx.fillRect(x + 30, y + 27 + bob, 8, 2); // mouth
+  // pixel-outline trim for higher contrast
+  ctx.strokeStyle='rgba(0,0,0,0.35)';
+  ctx.lineWidth=1;
+  ctx.strokeRect(x, y + bob, 68, 86);
 }
 
 function drawPOVBase(ctx, W, H, f, characterName, shirtColor, speechColor, charOpts = {}) {
