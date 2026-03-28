@@ -15,7 +15,7 @@ function paintScene(canvas, sceneId, frame) {
     case 'intro_mirror':    drawMirror(ctx, W, H, frame);    break;
     case 'intro_door':      drawDoor(ctx, W, H, frame);      break;
     case 'level1_trans':    drawCityDawn(ctx, W, H, frame);  break;
-    case 'pov_roxie':       drawPovRoxie(ctx, W, H, frame);  break;
+    case 'pov_mark':        drawPovMark(ctx, W, H, frame);   break;
     case 'pov_charly':      drawPovCharly(ctx, W, H, frame); break;
     case 'level2_trans':    drawCrowdScene(ctx, W, H, frame);break;
     case 'pov_jules':       drawPovJules(ctx, W, H, frame);  break;
@@ -27,6 +27,22 @@ function paintScene(canvas, sceneId, frame) {
     case 'victory_snowball':drawVictorySnowball(ctx, W, H, frame); break;
     default:                drawDefault(ctx, W, H, frame);   break;
   }
+  drawCinematicFX(ctx, W, H, frame);
+}
+
+function drawCinematicFX(ctx, W, H, f) {
+  // soft scanlines + vignette for smoother perceived animation in cutscenes
+  ctx.save();
+  ctx.globalAlpha = 0.06;
+  ctx.fillStyle = '#000';
+  for (let y = (f % 3); y < H; y += 3) ctx.fillRect(0, y, W, 1);
+  const vignette = ctx.createRadialGradient(W / 2, H / 2, 20, W / 2, H / 2, Math.max(W, H));
+  vignette.addColorStop(0, 'rgba(0,0,0,0)');
+  vignette.addColorStop(1, 'rgba(0,0,0,0.32)');
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, W, H);
+  ctx.restore();
 }
 
 function drawGreg8bit(ctx, x, y, scale=1, facing=1) {
@@ -322,14 +338,15 @@ function drawPOVBase(ctx, W, H, f, characterName, shirtColor, speechColor, charO
   ctx.fillText(characterName, W/2, 39);
 }
 
-function drawPovRoxie(ctx, W, H, f) {
-  drawPOVBase(ctx, W, H, f, 'ROXIE', '#36d1ff', '#7fe9ff', {
-    longHair: true,
-    hairColor: '#ff6db8',
-    accentColor: '#ffd6ef'
+function drawPovMark(ctx, W, H, f) {
+  drawPOVBase(ctx, W, H, f, 'MARK', '#8ec8ff', '#d8eeff', {
+    glasses: true,
+    beard: true,
+    hairColor: '#2a2018',
+    accentColor: '#f2f8ff'
   });
-  ctx.fillStyle='#b8f7ff'; ctx.font='11px monospace'; ctx.textAlign='center';
-  ctx.fillText('"You are not late to your own life."', W/2, 63);
+  ctx.fillStyle='#d8eeff'; ctx.font='11px monospace'; ctx.textAlign='center';
+  ctx.fillText('"Eric says your heart found the right destination."', W/2, 63);
 }
 
 function drawPovCharly(ctx, W, H, f) {
@@ -522,27 +539,27 @@ const CUTSCENES = {
       scene: 'intro_bedroom',
       title: 'A Night Like Any Other',
       lines: [
-        "Greg Mills lies awake. Tall, bearded, mohawk ponytail catching the faint light.",
-        "He has a secret he's been carrying for years — a truth that belongs only to him.",
-        "But tonight feels different. Tonight, he decides... it's time."
+        "Eric (Narrator): Greg Mills lies awake, tall and bearded, mohawk ponytail catching faint moonlight.",
+        "Eric (Narrator): He has carried a truth for years — and tonight he chooses to live it.",
+        "Eric (Narrator): His journey begins toward the man he loves."
       ]
     },
     {
       scene: 'intro_mirror',
       title: 'The Mirror Moment',
       lines: [
-        "Greg stands before the mirror. He looks at the man staring back at him.",
-        "And for the first time in a long time... he smiles.",
-        "\"That's me,\" he says. \"The real me. And I'm not hiding anymore.\""
+        "Eric (Narrator): Greg studies his reflection and finally sees himself clearly.",
+        "Eric (Narrator): He smiles for real, maybe for the first time in years.",
+        "\"That's me,\" Greg says. \"No more hiding.\""
       ]
     },
     {
       scene: 'intro_door',
       title: 'The Door',
       lines: [
-        "The front door feels heavier than usual. Rainbow light seeps through the cracks.",
-        "On the other side: a world that doesn't know Greg yet. Not the full Greg.",
-        "He takes a breath, grabs the handle... and steps forward."
+        "Eric (Narrator): The door feels heavy, but the rainbow light beyond it is louder than fear.",
+        "Eric (Narrator): Outside waits a world that has not met the full Greg yet.",
+        "Eric (Narrator): He breathes in, opens the door, and steps toward love."
       ]
     }
   ],
@@ -559,12 +576,12 @@ const CUTSCENES = {
       ]
     },
     {
-      scene: 'pov_roxie',
-      title: 'POV: Roxie At The Corner Cafe',
+      scene: 'pov_mark',
+      title: 'POV: Mark At The Corner Cafe',
       lines: [
-        "From Greg's POV, Roxie leans over the counter and grins.",
-        "\"You're not broken,\" she says. \"You're becoming.\"",
-        "Greg nods. He checks his Glock, breathes, and heads back into the street."
+        "From Greg's POV, Mark leans over the counter and grins.",
+        "\"Eric has been narrating this right,\" Mark says. \"You are becoming exactly who you are.\"",
+        "Greg nods, checks his sidearm, and heads back into the street."
       ]
     },
     {
@@ -573,7 +590,7 @@ const CUTSCENES = {
       lines: [
         "Charly — tall, slim, glasses catching the streetlight — wraps Greg in a steady hug.",
         "Their marriage was a cover, but their bond is real and deep.",
-        "\"I believe in you,\" Charly says. \"You will always be in my heart.\""
+        "\"I believe in you,\" Charly says. \"Go find your man. I'll always be in your corner.\""
       ]
     }
   ],
@@ -584,10 +601,10 @@ const CUTSCENES = {
       scene: 'level2_trans',
       title: 'Finding His People',
       lines: [
-        "Greg finds them — people who cheer, who wave flags, who know what it means to arrive.",
+        "Eric (Narrator): Greg finds people who cheer, wave flags, and understand what arriving means.",
         "For the first time, Greg feels the city answering back with love.",
         "Still, stray doubts keep rushing him from the edges.",
-        "He keeps moving: one block, one breath, one burst at a time."
+        "Eric (Narrator): He keeps moving — one block closer to his gay lover, one breath at a time."
       ]
     }
   ],
@@ -599,7 +616,7 @@ const CUTSCENES = {
       lines: [
         "Greg spots Jules waiting beneath a train sign, calm as ever.",
         "\"You're doing it,\" Jules says. \"Every step is proof.\"",
-        "Greg tightens his grip and keeps pushing toward the parade route."
+        "Eric (Narrator): Greg tightens his grip and pushes toward the parade route."
       ]
     },
     {
@@ -608,7 +625,7 @@ const CUTSCENES = {
       lines: [
         "Jairo Short appears — buff, bearded, Latino, hat tilted low and confident smile ready.",
         "\"Come here,\" Jairo says, touching Greg's shoulder. \"You don't fight alone.\"",
-        "Greg feels his chest open. This love is brave, loud, and real."
+        "Eric (Narrator): Greg feels his chest open. This love is brave, loud, and real."
       ]
     },
     {
@@ -617,7 +634,7 @@ const CUTSCENES = {
       lines: [
         "Chris arrives, ex-military and goofy, long beard bouncing as he jogs in.",
         "\"Tactical plan: be yourself and wreck doubt,\" Chris jokes.",
-        "Greg laughs out loud. Then he reloads and charges forward with both men beside him."
+        "Eric (Narrator): Greg laughs, reloads, and charges with both men beside him."
       ]
     }
   ],
@@ -629,7 +646,7 @@ const CUTSCENES = {
       lines: [
         "Music thumps from a distant block party as Marco jogs up beside Greg.",
         "\"No more hiding,\" Marco says. \"Let's clear this last street together.\"",
-        "Charly, Jairo, and Chris stand behind him — chosen family and true love all in one frame."
+        "Charly, Mark, Jairo, and Chris stand behind him — chosen family and true love in one frame."
       ]
     },
     {
@@ -637,7 +654,7 @@ const CUTSCENES = {
       title: 'Final Approach',
       lines: [
         "The sky burns red as SHAME gathers for one last stand.",
-        "Greg hears every ally in his mind: Charly, Jairo, Chris, Roxie, Jules, Marco — and his own voice, strongest of all.",
+        "Greg hears every ally in his mind: Eric narrating, Charly, Mark, Jairo, Chris, Jules, Marco — and his own voice strongest of all.",
         "He chambers a round, steps forward, and chooses himself."
       ]
     }
@@ -651,7 +668,7 @@ const CUTSCENES = {
       lines: [
         "The Shame Boss shatters into a thousand pieces of light.",
         "Greg stands tall — mohawk blazing, beard fierce, heart open.",
-        "Charly smiles with tears in her eyes while Jairo and Chris pull Greg into a laughing embrace.",
+        "Charly smiles with tears in her eyes while Mark, Jairo, and Chris pull Greg into a laughing embrace.",
         "He is not perfect. He is not finished. But he is FREE — and deeply loved."
       ]
     },

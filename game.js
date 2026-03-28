@@ -285,15 +285,28 @@ const touchPointerMap = new Map();
 function initLevel(li) {
   const L = LEVELS[li];
   const baseWorldW = L.worldW || 700;
-  const extendedWorldW = baseWorldW + 260;
+  const extendedWorldW = baseWorldW + 420 + li * 55;
   const bonusPlatformY = 170 + (li % 3) * 24;
-  const bonusPlatform = [extendedWorldW - 220, bonusPlatformY, 120];
-  const longPlatforms = [...L.platforms, bonusPlatform];
-  const longGems = [...L.gems, [bonusPlatform[0] + 30, bonusPlatform[1] - 22], [extendedWorldW - 70, L.groundY - 28]];
-  const longEnemies = L.bossX ? L.enemies : [...L.enemies, { x: extendedWorldW - 100, y: 288, dir: -1 }];
+  const bonusPlatformA = [extendedWorldW - 360, bonusPlatformY, 120];
+  const bonusPlatformB = [extendedWorldW - 180, bonusPlatformY - 36, 125];
+  const longPlatforms = [...L.platforms, bonusPlatformA, bonusPlatformB];
+  const longGems = [
+    ...L.gems,
+    [bonusPlatformA[0] + 30, bonusPlatformA[1] - 22],
+    [bonusPlatformB[0] + 55, bonusPlatformB[1] - 22],
+    [extendedWorldW - 70, L.groundY - 28]
+  ];
+  const longEnemies = L.bossX
+    ? L.enemies
+    : [
+      ...L.enemies,
+      { x: extendedWorldW - 230, y: 288, dir: -1 },
+      { x: extendedWorldW - 90, y: 288, dir: -1 }
+    ];
   const powerups = [
     { x: Math.min(extendedWorldW - 260, 260 + li * 85), y: L.groundY - 34, type: 'jairo', collected: false },
-    { x: Math.min(extendedWorldW - 130, 430 + li * 100), y: L.groundY - 34, type: 'chris', collected: false }
+    { x: Math.min(extendedWorldW - 180, 430 + li * 100), y: L.groundY - 34, type: 'chris', collected: false },
+    { x: Math.min(extendedWorldW - 105, 600 + li * 110), y: L.groundY - 34, type: 'mark', collected: false }
   ];
   screenShake.time = 0;
   screenShake.power = 0;
@@ -302,7 +315,7 @@ function initLevel(li) {
   state = {
     level: li,
     player: {
-      x:60, y:260, vx:0, vy:0, onGround:false, facing:1, hp:3, maxHp:3, invincible:0,
+      x:60, y:260, vx:0, vy:0, onGround:false, facing:1, hp:4, maxHp:4, invincible:0,
       coyote: 0, gunRecoil: 0, gunFlash: 0, runFrame: 0,
       runDustTimer: 0, landingImpact: 0, tilt: 0,
       weaponMode: 'pistol', weaponTimer: 0,
@@ -336,7 +349,7 @@ function initLevel(li) {
     platforms: longPlatforms,
     fireCooldown: 0,
     bombCooldown: 0,
-    bombs: 6,
+    bombs: 8,
     score: campaignScore,
     combo: 0,
     comboTimer: 0,
@@ -663,8 +676,9 @@ function drawPowerup(pu) {
   const x = Math.round(pu.x - state.camX);
   const y = Math.round(pu.y + Math.sin((frame + pu.x) * 0.08) * 2);
   const isJairo = pu.type === 'jairo';
+  const isMark = pu.type === 'mark';
   ctx.save();
-  ctx.fillStyle = isJairo ? '#ff7eb8' : '#8ed0ff';
+  ctx.fillStyle = isJairo ? '#ff7eb8' : (isMark ? '#b2ff8e' : '#8ed0ff');
   ctx.fillRect(x - 8, y - 8, 16, 14);
   ctx.fillStyle = '#f7d8bf';
   ctx.fillRect(x - 6, y - 10, 12, 6);
@@ -674,7 +688,7 @@ function drawPowerup(pu) {
   ctx.fillStyle = '#fff';
   ctx.font = '8px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText(isJairo ? 'J' : 'C', x, y + 3);
+  ctx.fillText(isJairo ? 'J' : (isMark ? 'M' : 'C'), x, y + 3);
   ctx.fillStyle = 'rgba(255,255,255,0.75)';
   ctx.fillRect(x - 2, y - 14, 4, 3);
   ctx.restore();
@@ -683,13 +697,14 @@ function drawPowerup(pu) {
 function drawBullet(b) {
   const x = Math.round(b.x - state.camX), y = Math.round(b.y);
   const slime = b.type === 'slime';
+  const rapid = b.type === 'rapid';
   ctx.save();
-  const trailLen = (slime ? 14 : 10) + Math.abs(b.vx) * 1.3;
+  const trailLen = (slime ? 14 : (rapid ? 16 : 10)) + Math.abs(b.vx) * 1.3;
   const grad = ctx.createLinearGradient(x - b.dir * trailLen, y, x, y);
-  grad.addColorStop(0, slime ? 'rgba(240,248,255,0)' : 'rgba(255,120,0,0)');
-  grad.addColorStop(1, slime ? 'rgba(255,255,255,0.92)' : 'rgba(255,210,120,0.85)');
+  grad.addColorStop(0, slime ? 'rgba(240,248,255,0)' : (rapid ? 'rgba(160,255,120,0)' : 'rgba(255,120,0,0)'));
+  grad.addColorStop(1, slime ? 'rgba(255,255,255,0.92)' : (rapid ? 'rgba(220,255,180,0.92)' : 'rgba(255,210,120,0.85)'));
   ctx.strokeStyle = grad;
-  ctx.lineWidth = slime ? 3 : 2;
+  ctx.lineWidth = slime ? 3 : (rapid ? 2.6 : 2);
   ctx.beginPath();
   ctx.moveTo(x - b.dir * trailLen, y);
   ctx.lineTo(x, y);
@@ -700,6 +715,11 @@ function drawBullet(b) {
     ctx.fillStyle='#d5e6f4';
     ctx.fillRect(x-2,y-2,8,4);
     ctx.fillStyle='#fff'; ctx.fillRect(x+4*b.dir,y-1,3,2);
+  } else if (rapid) {
+    ctx.fillStyle='rgba(180,255,140,0.52)';
+    ctx.fillRect(x-10*b.dir,y-2,8,4);
+    ctx.fillStyle='#d5ff99'; ctx.fillRect(x-3,y-1,8,3);
+    ctx.fillStyle='#fff'; ctx.fillRect(x+4*b.dir,y-1,2,2);
   } else {
     ctx.fillStyle='rgba(255,180,0,0.45)';
     ctx.fillRect(x-9*b.dir,y-2,7,4);
@@ -889,7 +909,12 @@ function drawHUD() {
   ctx.fillStyle='#9cf6ff';
   ctx.textAlign='center';
   const slimeActive = state.player.weaponMode === 'slime' && state.player.weaponTimer > 0;
-  ctx.fillText(slimeActive ? 'ARMS • SLIME CANNON' : 'ARMS • HANDGUN', W/2, 18);
+  const rapidActive = state.player.weaponMode === 'rapid' && state.player.weaponTimer > 0;
+  ctx.fillText(
+    slimeActive ? 'ARMS • SLIME CANNON' : (rapidActive ? 'ARMS • MARK BURST' : 'ARMS • HANDGUN'),
+    W/2,
+    18
+  );
   // hearts
   for (let i=0;i<state.player.maxHp;i++){
     ctx.fillStyle = i < state.player.hp ? '#ff1493' : '#444';
@@ -943,12 +968,12 @@ function updatePlayer() {
   const p = state.player;
   const L = LEVELS[state.level];
   const wasOnGround = p.onGround;
-  const maxSpeed = 4.2;
-  const accel = 0.58;
-  const airAccel = 0.33;
-  const friction = 0.8;
-  const grav = 0.42;
-  const jumpPow = -9.2;
+  const maxSpeed = 4.9;
+  const accel = 0.65;
+  const airAccel = 0.38;
+  const friction = 0.78;
+  const grav = 0.4;
+  const jumpPow = -9.8;
   const movingLeft = keys['ArrowLeft'] || keys['KeyA'];
   const movingRight = keys['ArrowRight'] || keys['KeyD'];
   const jumpHeld = keys['Space'] || keys['ArrowUp'] || keys['KeyW'];
@@ -1020,15 +1045,15 @@ function updatePlayer() {
     spawnParticles(p.x - p.facing * 8, p.y + 30, ['#d8b57a','#b48a53','#6a4e31'], 3);
     p.runDustTimer = 4;
   }
-  if ((Math.abs(p.vx) > 2.8 || Math.abs(p.vy) > 3.5) && frame % 2 === 0) {
+  if ((Math.abs(p.vx) > 2.4 || Math.abs(p.vy) > 3.2) && frame % 2 === 0) {
     state.trails.push({
       x: p.x,
       y: p.y + 12,
       w: 12,
       h: 20,
-      life: 6,
-      maxLife: 6,
-      color: 'rgba(255,105,180,0.18)'
+      life: 8,
+      maxLife: 8,
+      color: 'rgba(255,105,180,0.22)'
     });
   }
 
@@ -1048,11 +1073,13 @@ function updatePlayer() {
     if (pu.collected) return;
     if (Math.abs(p.x - pu.x) < 18 && Math.abs((p.y + 16) - pu.y) < 20) {
       pu.collected = true;
-      p.weaponMode = 'slime';
-      p.weaponTimer = 780;
+      p.weaponMode = pu.type === 'mark' ? 'rapid' : 'slime';
+      p.weaponTimer = pu.type === 'mark' ? 680 : 820;
       state.msgText = pu.type === 'jairo'
-        ? "Jairo kiss buff! Slime cannon online."
-        : "Chris kiss buff! Slime cannon online.";
+        ? "Jairo boost! Slime cannon online."
+        : pu.type === 'mark'
+          ? "Mark upgrade! Burst mode online."
+          : "Chris boost! Slime cannon online.";
       state.msgTimer = 140;
       spawnParticles(pu.x, pu.y, ['#ffffff','#d9e8ff','#ff9fd2'], 16);
       addScreenShake(1.8, 5);
@@ -1065,14 +1092,18 @@ function updatePlayer() {
 function fireShot() {
   const p = state.player;
   const slime = p.weaponMode === 'slime' && p.weaponTimer > 0;
-  const shotSpeed = slime ? 6 : 7;
-  state.bullets.push({
-    x: p.x + p.facing*(slime ? 20 : 15),
-    y: p.y + 10,
-    vx: p.facing*shotSpeed,
-    dir: p.facing,
-    life: slime ? 84 : 70,
-    type: slime ? 'slime' : 'bullet'
+  const rapid = p.weaponMode === 'rapid' && p.weaponTimer > 0;
+  const shotSpeed = slime ? 6 : (rapid ? 8.4 : 7);
+  const volley = rapid ? [-4, 0, 4] : [0];
+  volley.forEach(offsetY => {
+    state.bullets.push({
+      x: p.x + p.facing*(slime ? 20 : 15),
+      y: p.y + 10 + offsetY,
+      vx: p.facing*shotSpeed,
+      dir: p.facing,
+      life: slime ? 84 : (rapid ? 58 : 70),
+      type: slime ? 'slime' : (rapid ? 'rapid' : 'bullet')
+    });
   });
   p.gunRecoil = 6;
   p.gunFlash = 4;
@@ -1084,13 +1115,13 @@ function fireShot() {
     h: 4,
     life: 5,
     maxLife: 5,
-    color: slime ? 'rgba(255,255,255,0.72)' : 'rgba(255,240,150,0.7)'
+    color: slime ? 'rgba(255,255,255,0.72)' : (rapid ? 'rgba(185,255,140,0.78)' : 'rgba(255,240,150,0.7)')
   });
   spawnParticles(
     p.x + p.facing * 16,
     p.y + 10,
-    slime ? ['#ffffff','#e5f0ff','#d0e4f8'] : ['#fff799','#ff8c00','#ffd700'],
-    5
+    slime ? ['#ffffff','#e5f0ff','#d0e4f8'] : (rapid ? ['#f1ffd7','#b8ff80','#83c655'] : ['#fff799','#ff8c00','#ffd700']),
+    rapid ? 8 : 5
   );
   spawnParticles(p.x+p.facing*8, p.y+8, slime ? ['#f4f7ff','#ccd6e8'] : ['#c2a35f','#f0d28a'], 2);
   spawnSparkBurst(p.x + p.facing*16, p.y + 10, p.facing, 7);
@@ -1102,7 +1133,8 @@ function updateShooting() {
   if ((keys['KeyJ']||keys['KeyK']||keys['KeyX']) && state.fireCooldown===0){
     fireShot();
     const moving = Math.abs(state.player.vx) > 1.7;
-    state.fireCooldown = moving ? 7 : 9;
+    const rapid = state.player.weaponMode === 'rapid' && state.player.weaponTimer > 0;
+    state.fireCooldown = rapid ? (moving ? 4 : 5) : (moving ? 7 : 9);
   }
 }
 
@@ -1369,7 +1401,9 @@ function loop() {
 
   ctx.clearRect(0,0,W,H);
   ctx.save();
-  ctx.translate(screenShake.x, screenShake.y);
+  const cineSwayX = Math.sin(frame * 0.045) * 0.8;
+  const cineSwayY = Math.cos(frame * 0.04) * 0.65;
+  ctx.translate(screenShake.x + cineSwayX, screenShake.y + cineSwayY);
   drawWorld();
   state.gems.forEach(drawGem);
   state.powerups.forEach(drawPowerup);
