@@ -284,6 +284,17 @@ const touchPointerMap = new Map();
 // ---- INIT ----
 function initLevel(li) {
   const L = LEVELS[li];
+  const baseWorldW = L.worldW || 700;
+  const extendedWorldW = baseWorldW + 260;
+  const bonusPlatformY = 170 + (li % 3) * 24;
+  const bonusPlatform = [extendedWorldW - 220, bonusPlatformY, 120];
+  const longPlatforms = [...L.platforms, bonusPlatform];
+  const longGems = [...L.gems, [bonusPlatform[0] + 30, bonusPlatform[1] - 22], [extendedWorldW - 70, L.groundY - 28]];
+  const longEnemies = L.bossX ? L.enemies : [...L.enemies, { x: extendedWorldW - 100, y: 288, dir: -1 }];
+  const powerups = [
+    { x: Math.min(extendedWorldW - 260, 260 + li * 85), y: L.groundY - 34, type: 'jairo', collected: false },
+    { x: Math.min(extendedWorldW - 130, 430 + li * 100), y: L.groundY - 34, type: 'chris', collected: false }
+  ];
   screenShake.time = 0;
   screenShake.power = 0;
   screenShake.x = 0;
@@ -294,15 +305,16 @@ function initLevel(li) {
       x:60, y:260, vx:0, vy:0, onGround:false, facing:1, hp:3, maxHp:3, invincible:0,
       coyote: 0, gunRecoil: 0, gunFlash: 0, runFrame: 0,
       runDustTimer: 0, landingImpact: 0, tilt: 0,
+      weaponMode: 'pistol', weaponTimer: 0,
       anim: createAnimState('idle'),
       hurtTimer: 0,
       shootTimer: 0,
       deadTimer: 0
     },
-    gems:     L.gems.map(g => ({ x:g[0], y:g[1], collected:false })),
-    enemies:  L.enemies.map(e => ({
+    gems:     longGems.map(g => ({ x:g[0], y:g[1], collected:false })),
+    enemies:  longEnemies.map(e => ({
       x:e.x, y:e.y, dir:e.dir, vx:1.2*e.dir, alive:true, hp:2,
-      minX: Math.max(24, e.x - 95), maxX: Math.min((L.worldW || 700) - 24, e.x + 95),
+      minX: Math.max(24, e.x - 95), maxX: Math.min(extendedWorldW - 24, e.x + 95),
       fireTimer: 45 + Math.floor(Math.random()*80),
       anim: createAnimState('run'),
       hurtTimer: 0,
@@ -320,6 +332,8 @@ function initLevel(li) {
     explosions: [],
     particles: [],
     trails: [],
+    powerups,
+    platforms: longPlatforms,
     fireCooldown: 0,
     bombCooldown: 0,
     bombs: 6,
@@ -330,7 +344,7 @@ function initLevel(li) {
     msgText:   L.msg,
     levelName: L.name,
     camX:      0,
-    worldW:    L.worldW || 700,
+    worldW:    extendedWorldW,
     complete:  false,
     levelIntroTimer: 90
   };
@@ -458,7 +472,7 @@ function drawGregFallback(x, y, facing, invincible, gunRecoil = 0, gunFlash = 0)
   const bob = Math.abs(Math.sin(frame * (0.2 + speedRatio * 0.2))) * (1.4 + speedRatio * 1.2);
   const stride = Math.sin(frame * 0.38) * 2.9;
   const shoulderLift = Math.sin(frame * 0.5) * 1.5;
-  const lean = state.player.tilt * 0.08;
+  const lean = Math.max(-0.14, Math.min(0.14, state.player.tilt * 0.018));
   ctx.save();
   ctx.translate(Math.round(x), Math.round(y + bob));
   ctx.scale(facing, 1);
@@ -483,16 +497,32 @@ function drawGregFallback(x, y, facing, invincible, gunRecoil = 0, gunFlash = 0)
   ctx.fillStyle='#d59b58'; ctx.fillRect(-12,2+stride*0.2,3,4); ctx.fillRect(9,2-stride*0.2,3,4);
   // animated Glock-style sidearm + slide recoil
   const recoil = Math.min(4, gunRecoil);
-  ctx.fillStyle='#101010'; ctx.fillRect(10-recoil,7-shoulderLift*0.35,11,5);      // slide
-  ctx.fillStyle='#2b2b2b'; ctx.fillRect(10,12,7,4);             // frame
-  ctx.fillStyle='#111'; ctx.fillRect(12,14,3,4);                // grip
-  ctx.fillStyle='#888'; ctx.fillRect(20-recoil,9-shoulderLift*0.35,5,2);          // barrel
-  ctx.fillStyle='rgba(180,200,255,0.25)'; ctx.fillRect(12,8,5,1);
+  const slimeGun = state.player.weaponMode === 'slime';
+  if (slimeGun) {
+    ctx.fillStyle='#060606'; ctx.fillRect(10-recoil,7-shoulderLift*0.35,18,6);
+    ctx.fillStyle='#111'; ctx.fillRect(11,12,10,5);
+    ctx.fillStyle='#0f0f0f'; ctx.fillRect(13,15,4,5);
+    ctx.fillStyle='#1f1f1f'; ctx.fillRect(27-recoil,9-shoulderLift*0.35,8,3);
+    ctx.fillStyle='rgba(255,255,255,0.28)'; ctx.fillRect(12,8,11,1);
+    ctx.fillStyle='rgba(255,255,255,0.65)'; ctx.fillRect(31-recoil,9,3,2);
+  } else {
+    ctx.fillStyle='#101010'; ctx.fillRect(10-recoil,7-shoulderLift*0.35,11,5);      // slide
+    ctx.fillStyle='#2b2b2b'; ctx.fillRect(10,12,7,4);             // frame
+    ctx.fillStyle='#111'; ctx.fillRect(12,14,3,4);                // grip
+    ctx.fillStyle='#888'; ctx.fillRect(20-recoil,9-shoulderLift*0.35,5,2);          // barrel
+    ctx.fillStyle='rgba(180,200,255,0.25)'; ctx.fillRect(12,8,5,1);
+  }
   if (gunFlash > 0) {
     const flashGrow = 6 - gunFlash;
-    ctx.fillStyle='rgba(255,240,120,0.95)'; ctx.fillRect(24,6,5+flashGrow,6);
-    ctx.fillStyle='rgba(255,170,0,0.88)';   ctx.fillRect(28+flashGrow,7,4,4);
-    ctx.fillStyle='rgba(255,90,0,0.7)';     ctx.fillRect(31+flashGrow,8,3,2);
+    if (slimeGun) {
+      ctx.fillStyle='rgba(245,255,255,0.96)'; ctx.fillRect(31,6,6+flashGrow,6);
+      ctx.fillStyle='rgba(220,240,255,0.92)'; ctx.fillRect(35+flashGrow,7,5,4);
+      ctx.fillStyle='rgba(190,220,245,0.75)'; ctx.fillRect(39+flashGrow,8,4,2);
+    } else {
+      ctx.fillStyle='rgba(255,240,120,0.95)'; ctx.fillRect(24,6,5+flashGrow,6);
+      ctx.fillStyle='rgba(255,170,0,0.88)';   ctx.fillRect(28+flashGrow,7,4,4);
+      ctx.fillStyle='rgba(255,90,0,0.7)';     ctx.fillRect(31+flashGrow,8,3,2);
+    }
   }
   // head
   ctx.fillStyle='#b87843'; ctx.fillRect(-6,-10,13,14);
@@ -628,23 +658,54 @@ function drawGem(g) {
   ctx.restore();
 }
 
+function drawPowerup(pu) {
+  if (pu.collected) return;
+  const x = Math.round(pu.x - state.camX);
+  const y = Math.round(pu.y + Math.sin((frame + pu.x) * 0.08) * 2);
+  const isJairo = pu.type === 'jairo';
+  ctx.save();
+  ctx.fillStyle = isJairo ? '#ff7eb8' : '#8ed0ff';
+  ctx.fillRect(x - 8, y - 8, 16, 14);
+  ctx.fillStyle = '#f7d8bf';
+  ctx.fillRect(x - 6, y - 10, 12, 6);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(x - 4, y - 8, 2, 2);
+  ctx.fillRect(x + 2, y - 8, 2, 2);
+  ctx.fillStyle = '#fff';
+  ctx.font = '8px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(isJairo ? 'J' : 'C', x, y + 3);
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.fillRect(x - 2, y - 14, 4, 3);
+  ctx.restore();
+}
+
 function drawBullet(b) {
   const x = Math.round(b.x - state.camX), y = Math.round(b.y);
+  const slime = b.type === 'slime';
   ctx.save();
-  const trailLen = 10 + Math.abs(b.vx) * 1.3;
+  const trailLen = (slime ? 14 : 10) + Math.abs(b.vx) * 1.3;
   const grad = ctx.createLinearGradient(x - b.dir * trailLen, y, x, y);
-  grad.addColorStop(0, 'rgba(255,120,0,0)');
-  grad.addColorStop(1, 'rgba(255,210,120,0.85)');
+  grad.addColorStop(0, slime ? 'rgba(240,248,255,0)' : 'rgba(255,120,0,0)');
+  grad.addColorStop(1, slime ? 'rgba(255,255,255,0.92)' : 'rgba(255,210,120,0.85)');
   ctx.strokeStyle = grad;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = slime ? 3 : 2;
   ctx.beginPath();
   ctx.moveTo(x - b.dir * trailLen, y);
   ctx.lineTo(x, y);
   ctx.stroke();
-  ctx.fillStyle='rgba(255,180,0,0.45)';
-  ctx.fillRect(x-9*b.dir,y-2,7,4);
-  ctx.fillStyle='#ffee66'; ctx.fillRect(x-3,y-1,7,3);
-  ctx.fillStyle='#fff'; ctx.fillRect(x+3*b.dir,y-1,2,2);
+  if (slime) {
+    ctx.fillStyle='rgba(255,255,255,0.92)';
+    ctx.fillRect(x-10*b.dir,y-3,9,6);
+    ctx.fillStyle='#d5e6f4';
+    ctx.fillRect(x-2,y-2,8,4);
+    ctx.fillStyle='#fff'; ctx.fillRect(x+4*b.dir,y-1,3,2);
+  } else {
+    ctx.fillStyle='rgba(255,180,0,0.45)';
+    ctx.fillRect(x-9*b.dir,y-2,7,4);
+    ctx.fillStyle='#ffee66'; ctx.fillRect(x-3,y-1,7,3);
+    ctx.fillStyle='#fff'; ctx.fillRect(x+3*b.dir,y-1,2,2);
+  }
   ctx.restore();
 }
 
@@ -727,7 +788,7 @@ function drawWorld() {
   ctx.fillStyle='#1a5c1a'; ctx.fillRect(0-state.camX%state.worldW,L.groundY,state.worldW+W,8);
   for (let i=0;i<6;i++){ctx.fillStyle=PRIDE_COLS[i]; ctx.fillRect(0-state.camX%state.worldW,L.groundY+8+i*2,state.worldW+W,2);}
   // platforms
-  L.platforms.forEach(([px,py,pw])=>{
+  state.platforms.forEach(([px,py,pw])=>{
     const sx = px - state.camX;
     ctx.fillStyle='#3a2200'; ctx.fillRect(sx,py,pw,16);
     ctx.fillStyle='#5a3300'; ctx.fillRect(sx,py,pw,6);
@@ -827,7 +888,8 @@ function drawHUD() {
   ctx.fillText(`SCORE ${String(state.score).padStart(6, '0')}`, W - 10, 42);
   ctx.fillStyle='#9cf6ff';
   ctx.textAlign='center';
-  ctx.fillText('ARMS • HANDGUN', W/2, 18);
+  const slimeActive = state.player.weaponMode === 'slime' && state.player.weaponTimer > 0;
+  ctx.fillText(slimeActive ? 'ARMS • SLIME CANNON' : 'ARMS • HANDGUN', W/2, 18);
   // hearts
   for (let i=0;i<state.player.maxHp;i++){
     ctx.fillStyle = i < state.player.hp ? '#ff1493' : '#444';
@@ -924,7 +986,7 @@ function updatePlayer() {
   else p.onGround=false;
 
   // platforms
-  L.platforms.forEach(([px,py,pw])=>{
+  state.platforms.forEach(([px,py,pw])=>{
     if (p.x+8>px && p.x-8<px+pw && p.y+32>py && p.y+32<py+20 && p.vy>=0){
       p.y=py-32; p.vy=0; p.onGround=true;
     }
@@ -951,6 +1013,8 @@ function updatePlayer() {
   p.runDustTimer = Math.max(0, p.runDustTimer - 1);
   p.landingImpact = Math.max(0, p.landingImpact - 1);
   p.tilt += ((p.vx * 6) - p.tilt) * 0.2;
+  if (p.weaponTimer > 0) p.weaponTimer--;
+  else p.weaponMode = 'pistol';
 
   if (p.onGround && Math.abs(p.vx) > 1.5 && p.runDustTimer === 0) {
     spawnParticles(p.x - p.facing * 8, p.y + 30, ['#d8b57a','#b48a53','#6a4e31'], 3);
@@ -980,17 +1044,35 @@ function updatePlayer() {
     }
   });
 
+  state.powerups.forEach(pu => {
+    if (pu.collected) return;
+    if (Math.abs(p.x - pu.x) < 18 && Math.abs((p.y + 16) - pu.y) < 20) {
+      pu.collected = true;
+      p.weaponMode = 'slime';
+      p.weaponTimer = 780;
+      state.msgText = pu.type === 'jairo'
+        ? "Jairo kiss buff! Slime cannon online."
+        : "Chris kiss buff! Slime cannon online.";
+      state.msgTimer = 140;
+      spawnParticles(pu.x, pu.y, ['#ffffff','#d9e8ff','#ff9fd2'], 16);
+      addScreenShake(1.8, 5);
+    }
+  });
+
   if (p.hp<=0) initLevel(state.level);
 }
 
 function fireShot() {
   const p = state.player;
+  const slime = p.weaponMode === 'slime' && p.weaponTimer > 0;
+  const shotSpeed = slime ? 6 : 7;
   state.bullets.push({
-    x: p.x + p.facing*15,
+    x: p.x + p.facing*(slime ? 20 : 15),
     y: p.y + 10,
-    vx: p.facing*7,
+    vx: p.facing*shotSpeed,
     dir: p.facing,
-    life: 70
+    life: slime ? 84 : 70,
+    type: slime ? 'slime' : 'bullet'
   });
   p.gunRecoil = 6;
   p.gunFlash = 4;
@@ -1002,10 +1084,15 @@ function fireShot() {
     h: 4,
     life: 5,
     maxLife: 5,
-    color: 'rgba(255,240,150,0.7)'
+    color: slime ? 'rgba(255,255,255,0.72)' : 'rgba(255,240,150,0.7)'
   });
-  spawnParticles(p.x+p.facing*16, p.y+10, ['#fff799','#ff8c00','#ffd700'], 5);
-  spawnParticles(p.x+p.facing*8, p.y+8, ['#c2a35f','#f0d28a'], 2);
+  spawnParticles(
+    p.x + p.facing * 16,
+    p.y + 10,
+    slime ? ['#ffffff','#e5f0ff','#d0e4f8'] : ['#fff799','#ff8c00','#ffd700'],
+    5
+  );
+  spawnParticles(p.x+p.facing*8, p.y+8, slime ? ['#f4f7ff','#ccd6e8'] : ['#c2a35f','#f0d28a'], 2);
   spawnSparkBurst(p.x + p.facing*16, p.y + 10, p.facing, 7);
   spawnShellCasings(p.x + p.facing * 8, p.y + 8, p.facing, 2);
   addScreenShake(1.4, 4);
@@ -1247,17 +1334,17 @@ function checkLevelComplete() {
     state.msgText=msg; state.msgTimer=180;
 
     setTimeout(()=>{
+      if (currentLevel >= LEVELS.length - 1) {
+        gamePhase='won';
+        buildWinScreen();
+        return;
+      }
       gamePhase='cutscene';
       cutscenePlayer = new CutscenePlayer(()=>{
-        if (currentLevel < LEVELS.length-1){
-          currentLevel++;
-          initLevel(currentLevel);
-          gamePhase='playing';
-          loop();
-        } else {
-          gamePhase='won';
-          buildWinScreen();
-        }
+        currentLevel++;
+        initLevel(currentLevel);
+        gamePhase='playing';
+        loop();
       });
       cutscenePlayer.play(L.afterCutscene);
     }, 2500);
@@ -1285,6 +1372,7 @@ function loop() {
   ctx.translate(screenShake.x, screenShake.y);
   drawWorld();
   state.gems.forEach(drawGem);
+  state.powerups.forEach(drawPowerup);
   state.bullets.forEach(drawBullet);
   state.enemyShots.forEach(drawEnemyShot);
   drawExplosions();
