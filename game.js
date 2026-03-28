@@ -1,0 +1,437 @@
+// ============================================================
+//  GREG'S PRIDE QUEST — Main Game
+// ============================================================
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 640, H = 360;
+canvas.width = W; canvas.height = H;
+
+// ---- COLORS ----
+const PRIDE_COLS = ['#e40303','#ff8c00','#ffed00','#008026','#004dff','#750787'];
+
+// ---- LEVEL DEFINITIONS ----
+const LEVELS = [
+  {
+    name:      "The Quiet Closet",
+    bg:        ['#1a0533','#3d0f6b'],
+    groundY:   300,
+    platforms: [[150,260,100],[320,230,100],[480,200,100]],
+    gems:      [[180,240],[350,210],[510,180]],
+    enemies:   [{x:250,y:288,dir:1}],
+    bossX:     null,
+    msg:       "Collect all gems and defeat the Doubt Demons!",
+    afterCutscene: 'after_level1'
+  },
+  {
+    name:      "The World Outside",
+    bg:        ['#0a1a4d','#1a3a8f'],
+    groundY:   300,
+    platforms: [[100,250,80],[240,210,80],[400,170,100],[540,210,80]],
+    gems:      [[120,230],[265,190],[430,150],[565,190]],
+    enemies:   [{x:160,y:288,dir:1},{x:340,y:288,dir:-1}],
+    bossX:     null,
+    msg:       "Doubts are following — don't let them catch Greg!",
+    afterCutscene: 'after_level2'
+  },
+  {
+    name:      "Face Yourself",
+    bg:        ['#1a0000','#4d0000'],
+    groundY:   300,
+    platforms: [[120,240,90],[280,200,90],[460,240,90]],
+    gems:      [[145,220],[305,180],[485,220]],
+    enemies:   [],
+    bossX:     520,
+    msg:       "Defeat the Shame Boss — stomp it to win!",
+    afterCutscene: 'victory'
+  }
+];
+
+// ---- KEYS ----
+const keys = {};
+document.addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if (['Space','ArrowUp','ArrowLeft','ArrowRight','ArrowDown'].includes(e.code)) e.preventDefault();
+});
+document.addEventListener('keyup', e => { keys[e.code] = false; });
+
+// ---- STATE ----
+let state = null;
+let currentLevel = 0;
+let frame = 0;
+let gamePhase = 'start'; // 'start' | 'cutscene' | 'playing' | 'won'
+let cutscenePlayer = null;
+
+// ---- INIT ----
+function initLevel(li) {
+  const L = LEVELS[li];
+  state = {
+    level: li,
+    player: { x:60, y:260, vx:0, vy:0, onGround:false, facing:1, hp:3, maxHp:3, invincible:0 },
+    gems:     L.gems.map(g => ({ x:g[0], y:g[1], collected:false })),
+    enemies:  L.enemies.map(e => ({ x:e.x, y:e.y, dir:e.dir, vx:1.2*e.dir, alive:true, hp:2 })),
+    boss:     L.bossX ? { x:L.bossX, y:220, hp:8, maxHp:8, dir:-1, alive:true, atkTimer:0 } : null,
+    particles: [],
+    msgTimer:  180,
+    msgText:   L.msg,
+    levelName: L.name,
+    camX:      0,
+    worldW:    700,
+    complete:  false
+  };
+}
+
+// ---- START FLOW ----
+function buildStartScreen() {
+  const gc = document.getElementById('gameContainer');
+  const s = document.createElement('div');
+  s.id = 'startScreen';
+  s.innerHTML = `
+    <div class="pixel-title">GREG'S PRIDE QUEST</div>
+    <div class="pixel-sub">a journey to self-acceptance</div>
+    <div class="rainbow-bar">${PRIDE_COLS.map(c=>`<div style="background:${c}"></div>`).join('')}</div>
+    <button class="start-btn" id="startBtn">PRESS START</button>
+    <div class="controls">Arrow Keys / WASD — Move &amp; Jump &nbsp;|&nbsp; Space — Jump<br>Stomp enemies from above to defeat them</div>
+  `;
+  gc.appendChild(s);
+  document.getElementById('startBtn').addEventListener('click', beginGame);
+}
+
+function buildWinScreen() {
+  const gc = document.getElementById('gameContainer');
+  const w = document.createElement('div');
+  w.id = 'winScreen';
+  w.innerHTML = `
+    <div class="win-title">YOU DID IT, GREG!</div>
+    <div class="win-sub">Proud. Loud. 100% Himself.</div>
+    <div class="rainbow-bar">${PRIDE_COLS.map(c=>`<div style="background:${c}"></div>`).join('')}</div>
+    <div class="win-text">
+      Greg collected all the rainbow gems, defeated every Doubt Demon,<br>
+      and crushed the Shame Boss into glitter.<br><br>
+      <strong style="color:#ff69b4;">Greg Mills is loved exactly as he is.</strong>
+    </div>
+    <button class="start-btn" id="replayBtn">PLAY AGAIN</button>
+  `;
+  gc.appendChild(w);
+  document.getElementById('replayBtn').addEventListener('click', () => {
+    w.remove(); beginGame();
+  });
+}
+
+function beginGame() {
+  const ss = document.getElementById('startScreen');
+  if (ss) ss.remove();
+  currentLevel = 0;
+  // Play intro cutscene first
+  gamePhase = 'cutscene';
+  cutscenePlayer = new CutscenePlayer(() => {
+    initLevel(0);
+    gamePhase = 'playing';
+    loop();
+  });
+  cutscenePlayer.play('intro');
+}
+
+// ---- DRAW GREG ----
+function drawGreg(x, y, facing, invincible) {
+  if (invincible > 0 && Math.floor(invincible / 4) % 2 === 0) return;
+  ctx.save();
+  ctx.translate(Math.round(x), Math.round(y));
+  ctx.scale(facing, 1);
+  // boots
+  ctx.fillStyle='#3a1a00'; ctx.fillRect(-7,24,7,8); ctx.fillRect(2,24,7,8);
+  // pants
+  ctx.fillStyle='#1a1a5c'; ctx.fillRect(-7,14,14,12);
+  // belt
+  ctx.fillStyle='#8b4513'; ctx.fillRect(-7,12,14,4);
+  ctx.fillStyle='#ffd700'; ctx.fillRect(-2,12,4,4);
+  // shirt (pride colours cycle)
+  ctx.fillStyle='#ff69b4'; ctx.fillRect(-8,2,16,12);
+  // arms
+  ctx.fillStyle='#c68642'; ctx.fillRect(-12,2,5,10); ctx.fillRect(8,2,5,10);
+  // head
+  ctx.fillStyle='#c68642'; ctx.fillRect(-6,-10,13,14);
+  // beard
+  ctx.fillStyle='#5c3a1e'; ctx.fillRect(-6,0,13,6); ctx.fillRect(-7,-2,3,6); ctx.fillRect(11,-2,3,6);
+  // eyes
+  ctx.fillStyle='#000'; ctx.fillRect(0,-7,3,3); ctx.fillRect(-4,-7,3,3);
+  // smile
+  ctx.fillStyle='#ff9999'; ctx.fillRect(-3,-1,7,2);
+  // mohawk rainbow
+  for (let i=0;i<6;i++) { ctx.fillStyle=PRIDE_COLS[i]; ctx.fillRect(-2,-12-i*3,5,4); }
+  // ponytail
+  ctx.fillStyle='#5c3a1e'; ctx.fillRect(4,-10,3,14); ctx.fillRect(5,-5,4,3);
+  ctx.restore();
+}
+
+// ---- DRAW ENEMY ----
+function drawEnemy(e) {
+  if (!e.alive) return;
+  const x = Math.round(e.x - state.camX), y = Math.round(e.y);
+  ctx.save();
+  ctx.fillStyle='#3d0066'; ctx.fillRect(x-10,y-18,20,20);
+  ctx.fillStyle='#6600cc'; ctx.fillRect(x-8,y-20,16,8);
+  ctx.fillStyle='#ff0000'; ctx.fillRect(x-5,y-18,4,4); ctx.fillRect(x+2,y-18,4,4);
+  ctx.fillStyle='#220044'; ctx.fillRect(x-8,y-26,4,10); ctx.fillRect(x+4,y-26,4,10);
+  ctx.fillStyle='rgba(200,100,255,0.7)';
+  ctx.font='7px monospace'; ctx.textAlign='center';
+  ctx.fillText('DOUBT', x, y-29);
+  ctx.restore();
+}
+
+// ---- DRAW BOSS ----
+function drawBoss(b) {
+  if (!b.alive) return;
+  const x = Math.round(b.x - state.camX), y = Math.round(b.y);
+  const pulse = Math.sin(frame*0.1)*2;
+  ctx.save();
+  ctx.fillStyle='#1a0000'; ctx.fillRect(x-24,y-40+pulse,48,50);
+  ctx.fillStyle='#660000'; ctx.fillRect(x-20,y-44+pulse,40,14);
+  ctx.fillStyle='#aa0000'; ctx.fillRect(x-18,y-38+pulse,36,30);
+  ctx.fillStyle='#ff4400'; ctx.fillRect(x-12,y-34+pulse,8,8); ctx.fillRect(x+4,y-34+pulse,8,8);
+  ctx.fillStyle='#330000'; ctx.fillRect(x-10,y-20+pulse,20,5);
+  ctx.fillRect(x-12,y-18+pulse,4,4); ctx.fillRect(x+8,y-18+pulse,4,4);
+  ctx.fillStyle='#ff6666';
+  ctx.font='bold 9px monospace'; ctx.textAlign='center';
+  ctx.fillText('SHAME BOSS', x, y-50+pulse);
+  // HP bar
+  const bw=60, bfill=Math.round((b.hp/b.maxHp)*bw);
+  ctx.fillStyle='#440000'; ctx.fillRect(x-30,y-60,bw,8);
+  ctx.fillStyle='#ff2222'; ctx.fillRect(x-30,y-60,bfill,8);
+  ctx.strokeStyle='#fff'; ctx.lineWidth=0.5; ctx.strokeRect(x-30,y-60,bw,8);
+  ctx.restore();
+}
+
+// ---- DRAW GEM ----
+function drawGem(g) {
+  if (g.collected) return;
+  const x = Math.round(g.x - state.camX);
+  const y = Math.round(g.y - Math.sin(frame*0.05)*3);
+  const ri = Math.floor(frame/8)%6;
+  ctx.save();
+  ctx.fillStyle=PRIDE_COLS[ri];         ctx.fillRect(x-5,y-8,10,4);
+  ctx.fillStyle=PRIDE_COLS[(ri+1)%6];  ctx.fillRect(x-7,y-4,14,4);
+  ctx.fillStyle=PRIDE_COLS[(ri+2)%6];  ctx.fillRect(x-5,y,  10,4);
+  ctx.fillStyle='#fff'; ctx.fillRect(x-1,y-10,2,2); ctx.fillRect(x+5,y-4,2,2);
+  ctx.restore();
+}
+
+// ---- DRAW WORLD ----
+function drawWorld() {
+  const L = LEVELS[state.level];
+  ctx.fillStyle=L.bg[0]; ctx.fillRect(0,0,W,H/2);
+  ctx.fillStyle=L.bg[1]; ctx.fillRect(0,H/2,W,H/2);
+  // stars
+  for (let i=0;i<30;i++){
+    const sx=(i*137+state.camX*0.05)%W, sy=(i*97)%120;
+    ctx.fillStyle='#fff';
+    if (frame%60<30||i%3!==0) ctx.fillRect(sx,sy,1.5,1.5);
+  }
+  // ground
+  ctx.fillStyle='#2d1b00'; ctx.fillRect(0-state.camX%700,L.groundY,state.worldW+W,H);
+  ctx.fillStyle='#1a5c1a'; ctx.fillRect(0-state.camX%700,L.groundY,state.worldW+W,8);
+  for (let i=0;i<6;i++){ctx.fillStyle=PRIDE_COLS[i]; ctx.fillRect(0-state.camX%700,L.groundY+8+i*2,state.worldW+W,2);}
+  // platforms
+  L.platforms.forEach(([px,py,pw])=>{
+    const sx = px - state.camX;
+    ctx.fillStyle='#3a2200'; ctx.fillRect(sx,py,pw,16);
+    ctx.fillStyle='#5a3300'; ctx.fillRect(sx,py,pw,6);
+    for(let i=0;i<6;i++){ctx.fillStyle=PRIDE_COLS[i]; ctx.fillRect(sx,py+8+i,pw,1);}
+  });
+}
+
+// ---- PARTICLES ----
+function spawnParticles(x, y, colors, n=8) {
+  for (let i=0;i<n;i++){
+    state.particles.push({
+      x: x-state.camX, y,
+      vx: (Math.random()-0.5)*4,
+      vy: -Math.random()*4-1,
+      life: 40,
+      color: colors[Math.floor(Math.random()*colors.length)]
+    });
+  }
+}
+
+function updateParticles() {
+  state.particles = state.particles.filter(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.15; p.life--;
+    return p.life>0;
+  });
+}
+
+function drawParticles() {
+  state.particles.forEach(p=>{
+    ctx.globalAlpha=p.life/40;
+    ctx.fillStyle=p.color;
+    ctx.fillRect(p.x-2,p.y-2,4,4);
+  });
+  ctx.globalAlpha=1;
+}
+
+// ---- HUD ----
+function drawHUD() {
+  ctx.fillStyle='rgba(0,0,0,0.55)'; ctx.fillRect(0,0,W,28);
+  ctx.fillStyle='#ff69b4'; ctx.font='bold 13px monospace'; ctx.textAlign='left';
+  ctx.fillText('LEVEL '+(state.level+1)+': '+state.levelName, 10, 18);
+  // hearts
+  for (let i=0;i<state.player.maxHp;i++){
+    ctx.fillStyle = i < state.player.hp ? '#ff1493' : '#444';
+    ctx.font='16px monospace'; ctx.textAlign='right';
+    ctx.fillText('♥', W-10-i*22, 18);
+  }
+  // gems
+  const collected = state.gems.filter(g=>g.collected).length;
+  ctx.fillStyle='#ffd700'; ctx.font='12px monospace'; ctx.textAlign='left';
+  ctx.fillText('★ '+collected+'/'+state.gems.length, 10, 42);
+  // message
+  if (state.msgTimer > 0){
+    const alpha = Math.min(1, state.msgTimer/30);
+    ctx.globalAlpha=alpha;
+    ctx.fillStyle='rgba(0,0,0,0.65)'; ctx.fillRect(W/2-200,H-52,400,36);
+    ctx.fillStyle='#adf'; ctx.font='11px monospace'; ctx.textAlign='center';
+    ctx.fillText(state.msgText, W/2, H-30);
+    ctx.globalAlpha=1;
+    state.msgTimer--;
+  }
+}
+
+// ---- PHYSICS ----
+function updatePlayer() {
+  const p = state.player;
+  const L = LEVELS[state.level];
+  const speed=3.5, jumpPow=-9, grav=0.4;
+
+  if (keys['ArrowLeft']||keys['KeyA']){ p.vx=-speed; p.facing=-1; }
+  else if (keys['ArrowRight']||keys['KeyD']){ p.vx=speed; p.facing=1; }
+  else p.vx*=0.8;
+
+  if ((keys['Space']||keys['ArrowUp']||keys['KeyW']) && p.onGround){
+    p.vy=jumpPow; p.onGround=false;
+  }
+
+  p.vy+=grav; p.x+=p.vx; p.y+=p.vy;
+
+  // ground
+  if (p.y+32>=L.groundY){ p.y=L.groundY-32; p.vy=0; p.onGround=true; }
+
+  // platforms
+  L.platforms.forEach(([px,py,pw])=>{
+    if (p.x+8>px && p.x-8<px+pw && p.y+32>py && p.y+32<py+20 && p.vy>=0){
+      p.y=py-32; p.vy=0; p.onGround=true;
+    }
+  });
+
+  // bounds
+  if (p.x<20) p.x=20;
+  if (p.x>state.worldW-20) p.x=state.worldW-20;
+  if (p.y>H+50){ p.hp=Math.max(0,p.hp-1); p.x=60; p.y=260; p.vy=0; p.invincible=60; }
+  if (p.invincible>0) p.invincible--;
+
+  // camera
+  state.camX = Math.max(0, Math.min(state.worldW-W, p.x-W*0.4));
+
+  // gem collect
+  state.gems.forEach(g=>{
+    if (!g.collected && Math.abs(p.x-g.x)<18 && Math.abs(p.y+16-g.y)<18){
+      g.collected=true;
+      spawnParticles(g.x, g.y, PRIDE_COLS, 12);
+    }
+  });
+
+  if (p.hp<=0) initLevel(state.level);
+}
+
+function updateEnemies() {
+  const p = state.player;
+  state.enemies.forEach(e=>{
+    if (!e.alive) return;
+    e.x+=e.vx;
+    if (e.x<30||e.x>state.worldW-30) e.vx*=-1;
+    // enemy hits player
+    if (p.invincible===0 && Math.abs(p.x-e.x)<20 && Math.abs(p.y+16-e.y)<20){
+      p.hp=Math.max(0,p.hp-1); p.invincible=80; p.vy=-5;
+      spawnParticles(p.x, p.y, ['#ff0000','#ff6600'], 6);
+    }
+    // player stomps
+    if (p.vy>0 && p.y+32>e.y-10 && p.y+32<e.y+10 && Math.abs(p.x-e.x)<22){
+      e.hp--; p.vy=-6;
+      if (e.hp<=0){ e.alive=false; spawnParticles(e.x, e.y, PRIDE_COLS, 14); }
+    }
+  });
+}
+
+function updateBoss() {
+  if (!state.boss||!state.boss.alive) return;
+  const b=state.boss, p=state.player;
+  b.atkTimer++;
+  b.x += b.atkTimer%90<45 ? b.dir*1.2 : -b.dir*1.2;
+  if (b.x>state.worldW-60) b.dir=-1;
+  if (b.x<W/2) b.dir=1;
+  // hits player
+  if (p.invincible===0 && Math.abs(p.x-b.x)<36 && Math.abs((p.y+16)-(b.y+20))<36){
+    p.hp=Math.max(0,p.hp-1); p.invincible=80; p.vy=-6;
+    spawnParticles(p.x, p.y, ['#ff0000','#aa0000'], 6);
+  }
+  // player stomps boss
+  if (p.vy>0 && p.y+32>b.y-4 && p.y+32<b.y+10 && Math.abs(p.x-b.x)<36){
+    b.hp--; p.vy=-8;
+    spawnParticles(b.x, b.y, PRIDE_COLS, 10);
+    if (b.hp<=0){ b.alive=false; spawnParticles(b.x, b.y, PRIDE_COLS, 30); }
+  }
+}
+
+function checkLevelComplete() {
+  if (state.complete) return;
+  const allGems    = state.gems.every(g=>g.collected);
+  const allEnemies = state.enemies.every(e=>!e.alive);
+  const bossDown   = !state.boss||!state.boss.alive;
+  if (allGems && allEnemies && bossDown){
+    state.complete = true;
+    const L = LEVELS[state.level];
+    const msg = currentLevel===2 ? "SHAME DEFEATED! Greg is FREE!" :
+                currentLevel===0 ? "Rainbow gems collected! The path opens!" :
+                "Doubts defeated! One final challenge...";
+    state.msgText=msg; state.msgTimer=180;
+
+    setTimeout(()=>{
+      gamePhase='cutscene';
+      cutscenePlayer = new CutscenePlayer(()=>{
+        if (currentLevel < LEVELS.length-1){
+          currentLevel++;
+          initLevel(currentLevel);
+          gamePhase='playing';
+        } else {
+          gamePhase='won';
+          buildWinScreen();
+        }
+      });
+      cutscenePlayer.play(L.afterCutscene);
+    }, 2500);
+  }
+}
+
+// ---- MAIN LOOP ----
+function loop() {
+  if (gamePhase !== 'playing') return;
+  frame++;
+  updatePlayer();
+  updateEnemies();
+  updateBoss();
+  updateParticles();
+  checkLevelComplete();
+
+  ctx.clearRect(0,0,W,H);
+  drawWorld();
+  state.gems.forEach(drawGem);
+  state.enemies.forEach(drawEnemy);
+  if (state.boss) drawBoss(state.boss);
+  drawGreg(state.player.x-state.camX, state.player.y, state.player.facing, state.player.invincible);
+  drawParticles();
+  drawHUD();
+
+  requestAnimationFrame(loop);
+}
+
+// ---- KICK OFF ----
+buildStartScreen();

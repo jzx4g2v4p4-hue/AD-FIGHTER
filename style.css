@@ -1,0 +1,224 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0a0a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: monospace;
+  overflow: hidden;
+}
+
+#gameContainer {
+  position: relative;
+  width: 640px;
+  height: 360px;
+}
+
+canvas {
+  display: block;
+  width: 640px;
+  height: 360px;
+  image-rendering: pixelated;
+}
+
+#overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ---- CUTSCENE ---- */
+#cutscene {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: #000;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  pointer-events: all;
+}
+
+#cutscene .cs-art {
+  width: 100%;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+#cutscene .cs-art canvas {
+  width: auto;
+  height: 180px;
+  image-rendering: pixelated;
+}
+
+#cutscene .cs-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ff69b4;
+  text-align: center;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px #8b008b;
+}
+
+#cutscene .cs-text {
+  font-size: 13px;
+  color: #cce;
+  text-align: center;
+  max-width: 500px;
+  line-height: 1.9;
+  min-height: 60px;
+}
+
+#cutscene .cs-next {
+  margin-top: 18px;
+  background: transparent;
+  border: 2px solid #ff69b4;
+  color: #ff69b4;
+  font-family: monospace;
+  font-size: 13px;
+  padding: 8px 28px;
+  cursor: pointer;
+  pointer-events: all;
+  letter-spacing: 1px;
+  animation: blink 1s infinite;
+}
+
+#cutscene .cs-next:hover { background: #ff69b4; color: #fff; }
+
+#cutscene .rainbow-bar {
+  display: flex;
+  width: 260px;
+  height: 5px;
+  margin-bottom: 14px;
+}
+#cutscene .rainbow-bar div { flex: 1; }
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+/* ---- START SCREEN ---- */
+#startScreen {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(10,10,26,0.96);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 15;
+  pointer-events: all;
+}
+
+#startScreen .pixel-title {
+  font-size: 30px;
+  font-weight: bold;
+  color: #ff69b4;
+  text-shadow: 3px 3px #8b008b, -1px -1px #ff1493;
+  letter-spacing: 3px;
+  margin-bottom: 6px;
+}
+
+#startScreen .pixel-sub {
+  font-size: 13px;
+  color: #adf;
+  margin-bottom: 20px;
+  letter-spacing: 2px;
+}
+
+#startScreen .rainbow-bar {
+  display: flex;
+  width: 320px;
+  height: 6px;
+  margin-bottom: 20px;
+}
+#startScreen .rainbow-bar div { flex: 1; }
+
+#startScreen .start-btn {
+  background: #ff69b4;
+  color: #fff;
+  border: 3px solid #fff;
+  padding: 12px 36px;
+  font-family: monospace;
+  font-size: 16px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  animation: blink 1s infinite;
+}
+
+#startScreen .controls {
+  font-size: 11px;
+  color: #666;
+  margin-top: 14px;
+  line-height: 1.9;
+  text-align: center;
+}
+
+/* ---- WIN SCREEN ---- */
+#winScreen {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.94);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 15;
+  pointer-events: all;
+  text-align: center;
+  padding: 20px;
+}
+
+#winScreen .win-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #ff69b4;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  text-shadow: 2px 2px #8b008b;
+}
+
+#winScreen .win-sub {
+  font-size: 14px;
+  color: #adf;
+  margin-bottom: 14px;
+  letter-spacing: 1px;
+}
+
+#winScreen .rainbow-bar {
+  display: flex;
+  width: 300px;
+  height: 8px;
+  margin-bottom: 16px;
+}
+#winScreen .rainbow-bar div { flex: 1; }
+
+#winScreen .win-text {
+  font-size: 13px;
+  color: #ccc;
+  max-width: 400px;
+  line-height: 1.9;
+  margin-bottom: 20px;
+}
+
+#winScreen .start-btn {
+  background: #ff69b4;
+  color: #fff;
+  border: 3px solid #fff;
+  padding: 10px 28px;
+  font-family: monospace;
+  font-size: 14px;
+  cursor: pointer;
+  letter-spacing: 2px;
+}
