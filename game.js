@@ -178,20 +178,25 @@ function beginGame() {
 function drawGreg(x, y, facing, invincible, gunRecoil = 0, gunFlash = 0) {
   if (invincible > 0 && Math.floor(invincible / 4) % 2 === 0) return;
   const bob = Math.abs(Math.sin(frame * 0.2)) * 1.4;
+  const stride = Math.sin(frame * 0.35) * 2.4;
   ctx.save();
   ctx.translate(Math.round(x), Math.round(y + bob));
   ctx.scale(facing, 1);
   // boots
-  ctx.fillStyle='#3a1a00'; ctx.fillRect(-7,24,7,8); ctx.fillRect(2,24,7,8);
+  ctx.fillStyle='#1f0f05'; ctx.fillRect(-7+stride*0.3,24,7,8); ctx.fillRect(2-stride*0.3,24,7,8);
+  ctx.fillStyle='#4e2a0d'; ctx.fillRect(-6+stride*0.3,24,5,3); ctx.fillRect(3-stride*0.3,24,5,3);
   // pants
-  ctx.fillStyle='#1a1a5c'; ctx.fillRect(-7,14,14,12);
+  ctx.fillStyle='#131b54'; ctx.fillRect(-7,14,14,12);
+  ctx.fillStyle='#2f3a88'; ctx.fillRect(-4+stride*0.3,14,3,10); ctx.fillRect(1-stride*0.3,14,3,10);
   // belt
-  ctx.fillStyle='#8b4513'; ctx.fillRect(-7,12,14,4);
+  ctx.fillStyle='#5f2f0d'; ctx.fillRect(-7,12,14,4);
   ctx.fillStyle='#ffd700'; ctx.fillRect(-2,12,4,4);
   // shirt (pride colours cycle)
-  ctx.fillStyle='#ff69b4'; ctx.fillRect(-8,2,16,12);
+  ctx.fillStyle='#ff4aa8'; ctx.fillRect(-8,2,16,12);
+  ctx.fillStyle='#ffa4d4'; ctx.fillRect(-5,3,10,3);
   // arms
-  ctx.fillStyle='#c68642'; ctx.fillRect(-12,2,5,10); ctx.fillRect(8,2,5,10);
+  ctx.fillStyle='#a76935'; ctx.fillRect(-12,2+stride*0.2,5,10); ctx.fillRect(8,2-stride*0.2,5,10);
+  ctx.fillStyle='#d59b58'; ctx.fillRect(-11,2+stride*0.2,3,4); ctx.fillRect(9,2-stride*0.2,3,4);
   // animated Glock-style sidearm + slide recoil
   const recoil = Math.min(4, gunRecoil);
   ctx.fillStyle='#101010'; ctx.fillRect(10-recoil,7,11,5);      // slide
@@ -203,9 +208,11 @@ function drawGreg(x, y, facing, invincible, gunRecoil = 0, gunFlash = 0) {
     ctx.fillStyle='rgba(255,130,0,0.85)';   ctx.fillRect(28,8,3,3);
   }
   // head
-  ctx.fillStyle='#c68642'; ctx.fillRect(-6,-10,13,14);
+  ctx.fillStyle='#b87843'; ctx.fillRect(-6,-10,13,14);
+  ctx.fillStyle='#dfa766'; ctx.fillRect(-4,-9,9,4);
   // beard
-  ctx.fillStyle='#5c3a1e'; ctx.fillRect(-6,0,13,6); ctx.fillRect(-7,-2,3,6); ctx.fillRect(11,-2,3,6);
+  ctx.fillStyle='#452b15'; ctx.fillRect(-6,0,13,6); ctx.fillRect(-7,-2,3,6); ctx.fillRect(11,-2,3,6);
+  ctx.fillStyle='#725031'; ctx.fillRect(-4,1,9,2);
   // eyes
   ctx.fillStyle='#000'; ctx.fillRect(0,-7,3,3); ctx.fillRect(-4,-7,3,3);
   // smile
@@ -221,14 +228,16 @@ function drawGreg(x, y, facing, invincible, gunRecoil = 0, gunFlash = 0) {
 function drawEnemy(e) {
   if (!e.alive) return;
   const x = Math.round(e.x - state.camX), y = Math.round(e.y);
+  const wobble = Math.sin(frame * 0.25 + e.x * 0.03) * 2;
   ctx.save();
-  ctx.fillStyle='#3d0066'; ctx.fillRect(x-10,y-18,20,20);
-  ctx.fillStyle='#6600cc'; ctx.fillRect(x-8,y-20,16,8);
-  ctx.fillStyle='#ff0000'; ctx.fillRect(x-5,y-18,4,4); ctx.fillRect(x+2,y-18,4,4);
-  ctx.fillStyle='#220044'; ctx.fillRect(x-8,y-26,4,10); ctx.fillRect(x+4,y-26,4,10);
+  ctx.fillStyle='#240039'; ctx.fillRect(x-11,y-18+wobble,22,20);
+  ctx.fillStyle='#7e39d9'; ctx.fillRect(x-8,y-20+wobble,16,8);
+  ctx.fillStyle='#c494ff'; ctx.fillRect(x-6,y-19+wobble,5,2); ctx.fillRect(x+1,y-19+wobble,5,2);
+  ctx.fillStyle='#ff1a1a'; ctx.fillRect(x-5,y-16+wobble,4,4); ctx.fillRect(x+2,y-16+wobble,4,4);
+  ctx.fillStyle='#1a0030'; ctx.fillRect(x-8,y-26+wobble,4,10); ctx.fillRect(x+4,y-26+wobble,4,10);
   ctx.fillStyle='rgba(200,100,255,0.7)';
   ctx.font='7px monospace'; ctx.textAlign='center';
-  ctx.fillText('DOUBT', x, y-29);
+  ctx.fillText('DOUBT', x, y-30+wobble);
   ctx.restore();
 }
 
@@ -238,9 +247,10 @@ function drawBoss(b) {
   const x = Math.round(b.x - state.camX), y = Math.round(b.y);
   const pulse = Math.sin(frame*0.1)*2;
   ctx.save();
-  ctx.fillStyle='#1a0000'; ctx.fillRect(x-24,y-40+pulse,48,50);
-  ctx.fillStyle='#660000'; ctx.fillRect(x-20,y-44+pulse,40,14);
-  ctx.fillStyle='#aa0000'; ctx.fillRect(x-18,y-38+pulse,36,30);
+  ctx.fillStyle='#180000'; ctx.fillRect(x-24,y-40+pulse,48,50);
+  ctx.fillStyle='#4b0000'; ctx.fillRect(x-20,y-44+pulse,40,14);
+  ctx.fillStyle='#8c0000'; ctx.fillRect(x-18,y-38+pulse,36,30);
+  ctx.fillStyle='#cf3535'; ctx.fillRect(x-12,y-35+pulse,24,4);
   ctx.fillStyle='#ff4400'; ctx.fillRect(x-12,y-34+pulse,8,8); ctx.fillRect(x+4,y-34+pulse,8,8);
   ctx.fillStyle='#330000'; ctx.fillRect(x-10,y-20+pulse,20,5);
   ctx.fillRect(x-12,y-18+pulse,4,4); ctx.fillRect(x+8,y-18+pulse,4,4);
@@ -304,6 +314,22 @@ function drawWorld() {
   const L = LEVELS[state.level];
   ctx.fillStyle=L.bg[0]; ctx.fillRect(0,0,W,H/2);
   ctx.fillStyle=L.bg[1]; ctx.fillRect(0,H/2,W,H/2);
+  // metal-slug style parallax jungle + ruins
+  for (let i=0;i<6;i++) {
+    const tx = ((i*150) - (state.camX*0.25)%900);
+    ctx.fillStyle='rgba(12,40,20,0.35)';
+    ctx.fillRect(tx, 110, 34, 120);
+    ctx.fillRect(tx+7, 86, 20, 30);
+    ctx.fillStyle='rgba(20,60,25,0.25)';
+    ctx.fillRect(tx-12, 98, 62, 15);
+  }
+  for (let i=0;i<5;i++) {
+    const rx = ((i*190) - (state.camX*0.4)%950);
+    ctx.fillStyle='rgba(55,45,40,0.35)';
+    ctx.fillRect(rx, 170, 58, 72);
+    ctx.fillStyle='rgba(95,80,70,0.2)';
+    ctx.fillRect(rx+6, 176, 46, 10);
+  }
   // stars
   for (let i=0;i<30;i++){
     const sx=(i*137+state.camX*0.05)%W, sy=(i*97)%120;

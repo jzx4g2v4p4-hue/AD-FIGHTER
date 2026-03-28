@@ -196,23 +196,37 @@ function drawCrowdScene(ctx, W, H, f) {
 }
 
 function drawPOVBase(ctx, W, H, f, characterName, shirtColor, speechColor) {
-  const pulse = Math.sin(f * 0.08) * 0.04 + 0.08;
-  ctx.fillStyle='#101a34'; ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='rgba(255,255,255,0.05)'; ctx.fillRect(0,0,W,80);
-  // first person hands (Greg POV)
-  ctx.fillStyle='#c68642'; ctx.fillRect(W/2-70,H-46,34,18);
-  ctx.fillStyle='#c68642'; ctx.fillRect(W/2+36,H-46,34,18);
-  // camera vignette
-  ctx.fillStyle='rgba(0,0,0,0.35)';
-  ctx.fillRect(0,0,W,12); ctx.fillRect(0,H-12,W,12); ctx.fillRect(0,0,12,H); ctx.fillRect(W-12,0,12,H);
-  // character
-  drawGreg8bit(ctx, W/2, H-84 + Math.sin(f*0.1)*2, 1.45, 1);
-  ctx.fillStyle=shirtColor; ctx.fillRect(W/2-11,H-96,22,15);
-  // dialogue bubble
-  ctx.fillStyle=`rgba(0,0,0,${0.45+pulse})`; ctx.fillRect(W/2-140,26,280,54);
-  ctx.strokeStyle=speechColor; ctx.lineWidth=2; ctx.strokeRect(W/2-140,26,280,54);
+  const pulse = Math.sin(f * 0.08) * 0.05 + 0.08;
+  // painterly dusk background blocks for pseudo-real pixel look
+  for (let y=0; y<H; y+=12) {
+    const shade = 20 + Math.floor((y/H) * 45);
+    ctx.fillStyle=`rgb(${shade-8},${shade+10},${shade})`;
+    ctx.fillRect(0, y, W, 12);
+  }
+  for (let i=0;i<8;i++){
+    const tx=(i*85 + (f*0.3)%W)%W;
+    ctx.fillStyle='rgba(18,55,25,0.35)';
+    ctx.fillRect(tx, 40, 24, H-68);
+    ctx.fillRect(tx-8, 60, 40, 16);
+  }
+  // over-shoulder POV (left foreground)
+  ctx.fillStyle='#7a4a2a'; ctx.fillRect(24,H-102,62,84);
+  ctx.fillStyle='#d6a370'; ctx.fillRect(16,H-72,44,42);
+  ctx.fillStyle='#f4ba7f'; ctx.fillRect(14,H-60,22,32);
+  ctx.fillStyle='#ffb54d'; ctx.fillRect(42,H-96,30,30); // hair block
+  // target character right-midground
+  const tx = W - 118;
+  const ty = H - 104 + Math.sin(f*0.09)*2;
+  ctx.fillStyle='#6d3f24'; ctx.fillRect(tx, ty, 66, 86);
+  ctx.fillStyle=shirtColor; ctx.fillRect(tx+8, ty+32, 50, 30);
+  ctx.fillStyle='#d6a370'; ctx.fillRect(tx+20, ty+10, 24, 24);
+  // cinematic bars
+  ctx.fillStyle='rgba(0,0,0,0.35)'; ctx.fillRect(0,0,W,14); ctx.fillRect(0,H-14,W,14);
+  // dialogue panel
+  ctx.fillStyle=`rgba(0,0,0,${0.5+pulse})`; ctx.fillRect(74,20,W-148,56);
+  ctx.strokeStyle=speechColor; ctx.lineWidth=2; ctx.strokeRect(74,20,W-148,56);
   ctx.fillStyle=speechColor; ctx.font='bold 12px monospace'; ctx.textAlign='center';
-  ctx.fillText(characterName, W/2, 43);
+  ctx.fillText(characterName, W/2, 39);
 }
 
 function drawPovRoxie(ctx, W, H, f) {
@@ -224,9 +238,11 @@ function drawPovRoxie(ctx, W, H, f) {
 function drawPovCharly(ctx, W, H, f) {
   drawPOVBase(ctx, W, H, f, 'CHARLY', '#9ec5ff', '#d9e9ff');
   // glasses + taller silhouette
-  ctx.fillStyle='#222'; ctx.fillRect(W/2-10,H-116,9,2); ctx.fillRect(W/2+1,H-116,9,2); ctx.fillRect(W/2-1,H-116,2,2);
+  const tx = W - 118;
+  const ty = H - 104 + Math.sin(f*0.09)*2;
+  ctx.fillStyle='#222'; ctx.fillRect(tx+18,ty+18,8,2); ctx.fillRect(tx+30,ty+18,8,2); ctx.fillRect(tx+26,ty+18,4,2);
   ctx.fillStyle='#d9e9ff'; ctx.font='11px monospace'; ctx.textAlign='center';
-  ctx.fillText('"I believe in you. You are always in my heart."', W/2, 63);
+  ctx.fillText('"I believe in you. You are always in my heart."', W/2, 60);
 }
 
 function drawPovJules(ctx, W, H, f) {
@@ -238,19 +254,23 @@ function drawPovJules(ctx, W, H, f) {
 function drawPovJairo(ctx, W, H, f) {
   drawPOVBase(ctx, W, H, f, 'JAIRO', '#ffcf6a', '#ffe7b3');
   // hat + beard accents
-  ctx.fillStyle='#5b3a12'; ctx.fillRect(W/2-12,H-120,24,5);
-  ctx.fillStyle='#2d1b08'; ctx.fillRect(W/2-7,H-101,14,7);
+  const tx = W - 118;
+  const ty = H - 104 + Math.sin(f*0.09)*2;
+  ctx.fillStyle='#5b3a12'; ctx.fillRect(tx+14,ty+7,30,6);
+  ctx.fillStyle='#2d1b08'; ctx.fillRect(tx+20,ty+26,18,8);
   ctx.fillStyle='#fff0cc'; ctx.font='11px monospace'; ctx.textAlign='center';
-  ctx.fillText('"You are seen, querido. Keep that fire."', W/2, 63);
+  ctx.fillText('"You are seen, querido. Keep that fire."', W/2, 60);
 }
 
 function drawPovChris(ctx, W, H, f) {
   drawPOVBase(ctx, W, H, f, 'CHRIS', '#89f2c4', '#d6ffe8');
   // ex-military patch + bigger beard accent
-  ctx.fillStyle='#335f44'; ctx.fillRect(W/2-16,H-98,8,8);
-  ctx.fillStyle='#2b1b10'; ctx.fillRect(W/2-8,H-101,16,8);
+  const tx = W - 118;
+  const ty = H - 104 + Math.sin(f*0.09)*2;
+  ctx.fillStyle='#335f44'; ctx.fillRect(tx+6,ty+36,9,9);
+  ctx.fillStyle='#2b1b10'; ctx.fillRect(tx+18,ty+26,18,9);
   ctx.fillStyle='#e3fff2'; ctx.font='11px monospace'; ctx.textAlign='center';
-  ctx.fillText('"You got this, brother. Laugh and move."', W/2, 63);
+  ctx.fillText('"You got this, brother. Laugh and move."', W/2, 60);
 }
 
 function drawPovMarco(ctx, W, H, f) {
