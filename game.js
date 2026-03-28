@@ -10,6 +10,130 @@ canvas.width = W; canvas.height = H;
 // ---- COLORS ----
 const PRIDE_COLS = ['#e40303','#ff8c00','#ffed00','#008026','#004dff','#750787'];
 
+// ---- SPRITES / ASSET REGISTRY ----
+// Placeholder paths: replace with real PNG sheets later.
+const SPRITES = {
+  player: {
+    key: 'player',
+    src: 'assets/sprites/player_sheet.png',
+    frameWidth: 48,
+    frameHeight: 48,
+    originX: 24,
+    originY: 42,
+    states: {
+      idle:  { row: 0, frames: 4, speed: 8, loop: true },
+      run:   { row: 1, frames: 8, speed: 4, loop: true },
+      jump:  { row: 2, frames: 2, speed: 10, loop: false },
+      fall:  { row: 3, frames: 2, speed: 10, loop: false },
+      shoot: { row: 4, frames: 3, speed: 3, loop: false },
+      hurt:  { row: 5, frames: 2, speed: 6, loop: false },
+      death: { row: 6, frames: 6, speed: 5, loop: false }
+    }
+  },
+  enemy: {
+    key: 'enemy',
+    src: 'assets/sprites/enemy_sheet.png',
+    frameWidth: 40,
+    frameHeight: 40,
+    originX: 20,
+    originY: 34,
+    states: {
+      idle:  { row: 0, frames: 4, speed: 8, loop: true },
+      run:   { row: 1, frames: 6, speed: 5, loop: true },
+      shoot: { row: 2, frames: 3, speed: 4, loop: false },
+      hurt:  { row: 3, frames: 2, speed: 5, loop: false },
+      death: { row: 4, frames: 6, speed: 4, loop: false }
+    }
+  },
+  boss: {
+    key: 'boss',
+    src: 'assets/sprites/boss_sheet.png',
+    frameWidth: 96,
+    frameHeight: 96,
+    originX: 48,
+    originY: 78,
+    states: {
+      idle:   { row: 0, frames: 4, speed: 8, loop: true },
+      attack: { row: 1, frames: 6, speed: 4, loop: true },
+      hurt:   { row: 2, frames: 2, speed: 6, loop: false },
+      death:  { row: 3, frames: 8, speed: 4, loop: false }
+    }
+  },
+  explosion: {
+    key: 'explosion',
+    src: 'assets/sprites/explosion_sheet.png',
+    frameWidth: 96,
+    frameHeight: 96,
+    originX: 48,
+    originY: 48,
+    states: {
+      boom: { row: 0, frames: 8, speed: 2, loop: false }
+    }
+  }
+};
+
+const ASSETS = {};
+
+function loadSpriteSheet(cfg) {
+  const img = new Image();
+  img.src = cfg.src;
+  ASSETS[cfg.key] = { image: img, loaded: false, errored: false, cfg };
+  img.onload = () => { ASSETS[cfg.key].loaded = true; };
+  img.onerror = () => { ASSETS[cfg.key].errored = true; };
+}
+
+function initSpriteAssets() {
+  Object.values(SPRITES).forEach(loadSpriteSheet);
+}
+
+function createAnimState(defaultState = 'idle') {
+  return { state: defaultState, frame: 0, timer: 0, finished: false };
+}
+
+function setAnimState(anim, nextState) {
+  if (anim.state === nextState) return;
+  anim.state = nextState;
+  anim.frame = 0;
+  anim.timer = 0;
+  anim.finished = false;
+}
+
+function stepAnim(anim, spriteCfg) {
+  const meta = spriteCfg.states[anim.state] || spriteCfg.states.idle;
+  anim.timer++;
+  if (anim.timer >= meta.speed) {
+    anim.timer = 0;
+    if (anim.frame < meta.frames - 1) anim.frame++;
+    else if (meta.loop) anim.frame = 0;
+    else anim.finished = true;
+  }
+}
+
+function drawSpriteFrame(spriteKey, animState, worldX, worldY, facing = 1, alpha = 1) {
+  const asset = ASSETS[spriteKey];
+  if (!asset || !asset.loaded) return false;
+  const cfg = asset.cfg;
+  const stateMeta = cfg.states[animState.state] || cfg.states.idle;
+  const fw = cfg.frameWidth;
+  const fh = cfg.frameHeight;
+  const sx = animState.frame * fw;
+  const sy = stateMeta.row * fh;
+  const screenX = Math.round(worldX - state.camX);
+  const screenY = Math.round(worldY);
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(screenX, screenY);
+  if (facing < 0) ctx.scale(-1, 1);
+  ctx.drawImage(
+    asset.image,
+    sx, sy, fw, fh,
+    -cfg.originX, -cfg.originY, fw, fh
+  );
+  ctx.restore();
+  return true;
+}
+
 // ---- LEVEL DEFINITIONS ----
 const LEVELS = [
   {
@@ -121,15 +245,26 @@ function initLevel(li) {
     level: li,
     player: {
       x:60, y:260, vx:0, vy:0, onGround:false, facing:1, hp:3, maxHp:3, invincible:0,
-      coyote: 0, gunRecoil: 0, gunFlash: 0, runFrame: 0
+      coyote: 0, gunRecoil: 0, gunFlash: 0, runFrame: 0,
+      anim: createAnimState('idle'),
+      hurtTimer: 0
     },
     gems:     L.gems.map(g => ({ x:g[0], y:g[1], collected:false })),
     enemies:  L.enemies.map(e => ({
       x:e.x, y:e.y, dir:e.dir, vx:1.2*e.dir, alive:true, hp:2,
       minX: Math.max(24, e.x - 95), maxX: Math.min((L.worldW || 700) - 24, e.x + 95),
-      fireTimer: 45 + Math.floor(Math.random()*80)
+      fireTimer: 45 + Math.floor(Math.random()*80),
+      anim: createAnimState('run'),
+      hurtTimer: 0,
+      shootTimer: 0,
+      deadTimer: 0
     })),
-    boss:     L.bossX ? { x:L.bossX, y:220, hp:8, maxHp:8, dir:-1, alive:true, atkTimer:0 } : null,
+    boss:     L.bossX ? {
+      x:L.bossX, y:220, hp:8, maxHp:8, dir:-1, alive:true, atkTimer:0,
+      anim: createAnimState('idle'),
+      hurtTimer: 0,
+      deadTimer: 0
+    } : null,
     bullets:  [],
     enemyShots: [],
     explosions: [],
@@ -199,7 +334,7 @@ function beginGame() {
 }
 
 // ---- DRAW GREG ----
-function drawGreg(x, y, facing, invincible, gunRecoil = 0, gunFlash = 0) {
+function drawGregFallback(x, y, facing, invincible, gunRecoil = 0, gunFlash = 0) {
   if (invincible > 0 && Math.floor(invincible / 4) % 2 === 0) return;
   const bob = Math.abs(Math.sin(frame * 0.2)) * 1.4;
   const stride = Math.sin(frame * 0.38) * 2.9;
@@ -254,12 +389,12 @@ function drawGreg(x, y, facing, invincible, gunRecoil = 0, gunFlash = 0) {
 }
 
 // ---- DRAW ENEMY ----
-function drawEnemy(e) {
-  if (!e.alive) return;
+function drawEnemyFallback(e, alpha = 1) {
   const x = Math.round(e.x - state.camX), y = Math.round(e.y);
   const wobble = Math.sin(frame * 0.25 + e.x * 0.03) * 2;
   const step = Math.sin(frame * 0.38 + e.x * 0.06) * 2;
   ctx.save();
+  ctx.globalAlpha = alpha;
   ctx.fillStyle='#1f0038'; ctx.fillRect(x-12,y-18+wobble,24,20);
   ctx.fillStyle='#7e39d9'; ctx.fillRect(x-9,y-20+wobble,18,8);
   ctx.fillStyle='#c494ff'; ctx.fillRect(x-6,y-19+wobble,5,2); ctx.fillRect(x+1,y-19+wobble,5,2);
@@ -275,12 +410,12 @@ function drawEnemy(e) {
 }
 
 // ---- DRAW BOSS ----
-function drawBoss(b) {
-  if (!b.alive) return;
+function drawBossFallback(b, alpha = 1) {
   const x = Math.round(b.x - state.camX), y = Math.round(b.y);
   const pulse = Math.sin(frame*0.1)*2;
   const jaw = Math.sin(frame*0.35)*2;
   ctx.save();
+  ctx.globalAlpha = alpha;
   ctx.fillStyle='#180000'; ctx.fillRect(x-26,y-42+pulse,52,54);
   ctx.fillStyle='#4b0000'; ctx.fillRect(x-21,y-46+pulse,42,15);
   ctx.fillStyle='#8c0000'; ctx.fillRect(x-19,y-40+pulse,38,33);
@@ -299,6 +434,59 @@ function drawBoss(b) {
   ctx.fillStyle='#ff2222'; ctx.fillRect(x-30,y-60,bfill,8);
   ctx.strokeStyle='#fff'; ctx.lineWidth=0.5; ctx.strokeRect(x-30,y-60,bw,8);
   ctx.restore();
+}
+
+function getPlayerAnimState(p) {
+  if (p.invincible > 0 && p.hurtTimer > 0) return 'hurt';
+  if (p.gunFlash > 0) return 'shoot';
+  if (!p.onGround) return p.vy < 0 ? 'jump' : 'fall';
+  if (Math.abs(p.vx) > 0.7) return 'run';
+  return 'idle';
+}
+
+function getEnemyAnimState(e) {
+  if (!e.alive) return 'death';
+  if (e.hurtTimer > 0) return 'hurt';
+  if (e.shootTimer > 0) return 'shoot';
+  if (Math.abs(e.vx) > 0.2) return 'run';
+  return 'idle';
+}
+
+function getBossAnimState(b) {
+  if (!b.alive) return 'death';
+  if (b.hurtTimer > 0) return 'hurt';
+  if (b.atkTimer % 42 < 20) return 'attack';
+  return 'idle';
+}
+
+function drawGreg(x, y, facing, invincible, gunRecoil = 0, gunFlash = 0) {
+  const p = state.player;
+  const next = getPlayerAnimState(p);
+  setAnimState(p.anim, next);
+  stepAnim(p.anim, SPRITES.player);
+  const hitFlashAlpha = (invincible > 0 && Math.floor(invincible / 4) % 2 === 0) ? 0.55 : 1;
+  const drawn = drawSpriteFrame('player', p.anim, x + state.camX, y + 32, facing, hitFlashAlpha);
+  if (!drawn) drawGregFallback(x, y, facing, invincible, gunRecoil, gunFlash);
+}
+
+function drawEnemy(e) {
+  if (!e.alive && e.deadTimer <= 0) return;
+  const next = getEnemyAnimState(e);
+  setAnimState(e.anim, next);
+  stepAnim(e.anim, SPRITES.enemy);
+  const alpha = !e.alive ? Math.max(0, e.deadTimer / 20) : 1;
+  const drawn = drawSpriteFrame('enemy', e.anim, e.x, e.y + 16, e.vx >= 0 ? 1 : -1, alpha);
+  if (!drawn) drawEnemyFallback(e, alpha);
+}
+
+function drawBoss(b) {
+  if (!b.alive && b.deadTimer <= 0) return;
+  const next = getBossAnimState(b);
+  setAnimState(b.anim, next);
+  stepAnim(b.anim, SPRITES.boss);
+  const alpha = !b.alive ? Math.max(0, b.deadTimer / 30) : 1;
+  const drawn = drawSpriteFrame('boss', b.anim, b.x, b.y + 30, b.dir >= 0 ? 1 : -1, alpha);
+  if (!drawn) drawBossFallback(b, alpha);
 }
 
 // ---- DRAW GEM ----
@@ -335,15 +523,18 @@ function drawEnemyShot(s) {
 
 function drawExplosions() {
   state.explosions.forEach(ex=>{
-    const x = Math.round(ex.x - state.camX), y = Math.round(ex.y);
-    const r = Math.max(4, ex.radius * (ex.life / ex.maxLife));
-    ctx.save();
-    ctx.globalAlpha = ex.life / ex.maxLife;
-    ctx.fillStyle='rgba(255,120,30,0.8)';
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle='rgba(255,220,120,0.9)';
-    ctx.beginPath(); ctx.arc(x, y, r*0.45, 0, Math.PI*2); ctx.fill();
-    ctx.restore();
+    const drawn = drawSpriteFrame('explosion', ex.anim, ex.x, ex.y, 1, ex.life / ex.maxLife);
+    if (!drawn) {
+      const x = Math.round(ex.x - state.camX), y = Math.round(ex.y);
+      const r = Math.max(4, ex.radius * (ex.life / ex.maxLife));
+      ctx.save();
+      ctx.globalAlpha = ex.life / ex.maxLife;
+      ctx.fillStyle='rgba(255,120,30,0.8)';
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle='rgba(255,220,120,0.9)';
+      ctx.beginPath(); ctx.arc(x, y, r*0.45, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
   });
 }
 
@@ -536,6 +727,7 @@ function updatePlayer() {
   if (p.x>state.worldW-20) p.x=state.worldW-20;
   if (p.y>H+50){ p.hp=Math.max(0,p.hp-1); p.x=60; p.y=260; p.vy=0; p.invincible=60; }
   if (p.invincible>0) p.invincible--;
+  p.hurtTimer = Math.max(0, p.hurtTimer - 1);
   if (state.fireCooldown>0) state.fireCooldown--;
   p.gunRecoil = Math.max(0, p.gunRecoil - 1);
   p.gunFlash = Math.max(0, p.gunFlash - 1);
@@ -579,7 +771,7 @@ function updateShooting() {
 }
 
 function spawnExplosion(x, y, radius = 56) {
-  state.explosions.push({ x, y, radius, life: 18, maxLife: 18 });
+  state.explosions.push({ x, y, radius, life: 18, maxLife: 18, anim: createAnimState('boom') });
   spawnParticles(x, y, ['#ffef99','#ff9433','#ff3300'], 26);
 }
 
@@ -595,6 +787,7 @@ function updateBombs() {
 
 function updateExplosions() {
   state.explosions = state.explosions.filter(ex => {
+    stepAnim(ex.anim, SPRITES.explosion);
     ex.life--;
     const damageWindow = ex.life === ex.maxLife - 1;
     if (damageWindow) {
@@ -602,14 +795,17 @@ function updateExplosions() {
         if (!e.alive) return;
         if (Math.hypot(e.x - ex.x, (e.y - 10) - ex.y) < ex.radius) {
           e.alive = false;
+          e.deadTimer = 20;
           spawnParticles(e.x, e.y, PRIDE_COLS, 18);
         }
       });
       if (state.boss && state.boss.alive && Math.hypot(state.boss.x - ex.x, state.boss.y - ex.y) < ex.radius + 16) {
         state.boss.hp = Math.max(0, state.boss.hp - 2);
+        state.boss.hurtTimer = 12;
         spawnParticles(state.boss.x, state.boss.y, ['#ffcc66','#ff3333','#fff'], 20);
         if (state.boss.hp <= 0) {
           state.boss.alive = false;
+          state.boss.deadTimer = 30;
           spawnParticles(state.boss.x, state.boss.y, PRIDE_COLS, 30);
         }
       }
@@ -629,10 +825,12 @@ function updateBullets() {
       if (!e.alive || hit) return;
       if (Math.abs(b.x-e.x)<16 && Math.abs(b.y-(e.y-8))<16){
         e.hp--;
+        e.hurtTimer = 10;
         spawnParticles(e.x, e.y-8, ['#ff66ff','#9966ff','#fff'], 8);
         spawnSparkBurst(e.x, e.y - 8, b.dir, 4);
         if (e.hp<=0){
           e.alive=false;
+          e.deadTimer=20;
           spawnParticles(e.x, e.y, PRIDE_COLS, 14);
         }
         hit = true;
@@ -643,10 +841,12 @@ function updateBullets() {
       const boss = state.boss;
       if (Math.abs(b.x-boss.x)<28 && Math.abs(b.y-(boss.y-12))<30){
         boss.hp--;
+        boss.hurtTimer = 12;
         spawnParticles(boss.x, boss.y-10, ['#ff6666','#ff2222','#fff'], 8);
         spawnSparkBurst(boss.x - 12, boss.y - 12, b.dir, 6);
         if (boss.hp<=0){
           boss.alive=false;
+          boss.deadTimer = 30;
           spawnParticles(boss.x, boss.y, PRIDE_COLS, 30);
         }
         hit = true;
@@ -668,6 +868,7 @@ function updateEnemyShots() {
       const dy = (p.y + 8) - (e.y - 8);
       const len = Math.max(1, Math.hypot(dx, dy));
       state.enemyShots.push({ x:e.x, y:e.y-8, vx:(dx/len)*3.2, vy:(dy/len)*3.2, life:140 });
+      e.shootTimer = 10;
       e.fireTimer = 56 + Math.floor(Math.random()*45);
     }
   });
@@ -692,6 +893,7 @@ function updateEnemyShots() {
     if (p.invincible===0 && Math.abs(p.x-s.x)<12 && Math.abs((p.y+14)-s.y)<18){
       p.hp=Math.max(0,p.hp-1);
       p.invincible=75;
+      p.hurtTimer = 22;
       p.vy=-4;
       spawnParticles(p.x, p.y, ['#ff2200','#ff8800','#fff'], 8);
       return false;
@@ -703,39 +905,51 @@ function updateEnemyShots() {
 function updateEnemies() {
   const p = state.player;
   state.enemies.forEach(e=>{
-    if (!e.alive) return;
+    if (!e.alive) {
+      e.deadTimer = Math.max(0, e.deadTimer - 1);
+      return;
+    }
+    e.hurtTimer = Math.max(0, e.hurtTimer - 1);
+    e.shootTimer = Math.max(0, e.shootTimer - 1);
     e.x+=e.vx;
     if (e.x<e.minX||e.x>e.maxX) e.vx*=-1;
     // enemy hits player
     if (p.invincible===0 && Math.abs(p.x-e.x)<20 && Math.abs(p.y+16-e.y)<20){
-      p.hp=Math.max(0,p.hp-1); p.invincible=80; p.vy=-5;
+      p.hp=Math.max(0,p.hp-1); p.invincible=80; p.hurtTimer=22; p.vy=-5;
       spawnParticles(p.x, p.y, ['#ff0000','#ff6600'], 6);
     }
     // player stomps
     if (p.vy>0 && p.y+32>e.y-10 && p.y+32<e.y+10 && Math.abs(p.x-e.x)<22){
       e.hp--; p.vy=-6;
-      if (e.hp<=0){ e.alive=false; spawnParticles(e.x, e.y, PRIDE_COLS, 14); }
+      if (e.hp<=0){ e.alive=false; e.deadTimer=20; spawnParticles(e.x, e.y, PRIDE_COLS, 14); }
+      else e.hurtTimer = 10;
     }
   });
 }
 
 function updateBoss() {
-  if (!state.boss||!state.boss.alive) return;
+  if (!state.boss) return;
   const b=state.boss, p=state.player;
+  b.hurtTimer = Math.max(0, b.hurtTimer - 1);
+  if (!b.alive) {
+    b.deadTimer = Math.max(0, b.deadTimer - 1);
+    return;
+  }
   b.atkTimer++;
   b.x += b.atkTimer%90<45 ? b.dir*1.2 : -b.dir*1.2;
   if (b.x>state.worldW-60) b.dir=-1;
   if (b.x<W/2) b.dir=1;
   // hits player
   if (p.invincible===0 && Math.abs(p.x-b.x)<36 && Math.abs((p.y+16)-(b.y+20))<36){
-    p.hp=Math.max(0,p.hp-1); p.invincible=80; p.vy=-6;
+    p.hp=Math.max(0,p.hp-1); p.invincible=80; p.hurtTimer=24; p.vy=-6;
     spawnParticles(p.x, p.y, ['#ff0000','#aa0000'], 6);
   }
   // player stomps boss
   if (p.vy>0 && p.y+32>b.y-4 && p.y+32<b.y+10 && Math.abs(p.x-b.x)<36){
     b.hp--; p.vy=-8;
     spawnParticles(b.x, b.y, PRIDE_COLS, 10);
-    if (b.hp<=0){ b.alive=false; spawnParticles(b.x, b.y, PRIDE_COLS, 30); }
+    if (b.hp<=0){ b.alive=false; b.deadTimer=30; spawnParticles(b.x, b.y, PRIDE_COLS, 30); }
+    else b.hurtTimer = 12;
   }
 }
 
@@ -811,4 +1025,5 @@ function loop() {
 }
 
 // ---- KICK OFF ----
+initSpriteAssets();
 buildStartScreen();
