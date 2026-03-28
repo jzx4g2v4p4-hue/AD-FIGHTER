@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Pride Quest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#111839" />
   <title>Greg's Pride Quest</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -10,6 +15,17 @@
   <div id="gameContainer">
     <canvas id="c"></canvas>
     <div id="overlay"></div>
+    <div id="touchControls" aria-label="Mobile controls">
+      <div class="touch-left">
+        <button class="touch-btn move" data-key="ArrowLeft" aria-label="Move left">◀</button>
+        <button class="touch-btn move" data-key="ArrowRight" aria-label="Move right">▶</button>
+      </div>
+      <div class="touch-right">
+        <button class="touch-btn action" data-key="Space" aria-label="Jump">JUMP</button>
+        <button class="touch-btn action" data-key="KeyJ" aria-label="Fire">FIRE</button>
+        <button class="touch-btn action bomb" data-key="KeyL" aria-label="Bomb">BOMB</button>
+      </div>
+    </div>
   </div>
   <script src="cutscenes.js"></script>
   <script src="game.js"></script>

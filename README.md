@@ -6,6 +6,8 @@ An 8-bit platformer about Greg Mills and his journey to accepting himself as the
 
 Open `index.html` in any modern browser — no build step, no dependencies. Just pure pixel joy.
 
+Now optimized for mobile play on iPhone, iPad, and Samsung/Android browsers with: responsive 16:9 scaling, safe-area spacing, fullscreen web-app meta tags, and on-screen touch controls.
+
 Or host it instantly for free via [GitHub Pages](https://pages.github.com/).
 
 ## The Story

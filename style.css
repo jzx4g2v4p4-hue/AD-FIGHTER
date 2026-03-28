@@ -1,26 +1,36 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  background: #0a0a1a;
+  background: radial-gradient(circle at top, #111839 0%, #0a0a1a 62%);
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  font-family: monospace;
+  min-height: 100dvh;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Mono", monospace;
   overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
+  padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 #gameContainer {
   position: relative;
-  width: 640px;
-  height: 360px;
+  width: min(100vw - 16px, 640px);
+  aspect-ratio: 16 / 9;
+  max-height: calc(100dvh - 16px);
 }
 
 canvas {
   display: block;
-  width: 640px;
-  height: 360px;
+  width: 100%;
+  height: 100%;
   image-rendering: pixelated;
+  border-radius: 16px;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.45);
 }
 
 #overlay {
@@ -221,4 +231,83 @@ canvas {
   font-size: 14px;
   cursor: pointer;
   letter-spacing: 2px;
+}
+
+
+#touchControls {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: none;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 12px;
+  pointer-events: none;
+}
+
+#touchControls.enabled {
+  display: flex;
+}
+
+#touchControls .touch-left,
+#touchControls .touch-right {
+  display: flex;
+  gap: 10px;
+  pointer-events: none;
+}
+
+#touchControls .touch-right {
+  align-items: flex-end;
+}
+
+.touch-btn {
+  pointer-events: all;
+  border: 2px solid rgba(255,255,255,0.86);
+  background: rgba(20,25,42,0.54);
+  color: #fff;
+  border-radius: 999px;
+  width: 56px;
+  height: 56px;
+  font-weight: 700;
+  font-size: 17px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.touch-btn.action {
+  width: 68px;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.touch-btn.bomb {
+  border-color: #ffd27f;
+  color: #ffd27f;
+}
+
+.touch-btn.active {
+  background: rgba(255,105,180,0.85);
+  border-color: #fff;
+  transform: translateY(1px) scale(0.98);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  #touchControls {
+    display: none !important;
+  }
+}
+
+@media (max-width: 900px), (hover: none), (pointer: coarse) {
+  #startScreen .controls {
+    font-size: 10px;
+    max-width: 90%;
+  }
+
+  #touchControls.enabled {
+    display: flex;
+  }
 }
