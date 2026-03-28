@@ -293,6 +293,7 @@ function initLevel(li) {
     player: {
       x:60, y:260, vx:0, vy:0, onGround:false, facing:1, hp:3, maxHp:3, invincible:0,
       coyote: 0, gunRecoil: 0, gunFlash: 0, runFrame: 0,
+      runDustTimer: 0, landingImpact: 0, tilt: 0,
       anim: createAnimState('idle'),
       hurtTimer: 0,
       shootTimer: 0,
@@ -318,6 +319,7 @@ function initLevel(li) {
     enemyShots: [],
     explosions: [],
     particles: [],
+    trails: [],
     fireCooldown: 0,
     bombCooldown: 0,
     bombs: 6,
@@ -452,12 +454,17 @@ function beginGame() {
 // ---- DRAW GREG ----
 function drawGregFallback(x, y, facing, invincible, gunRecoil = 0, gunFlash = 0) {
   if (invincible > 0 && Math.floor(invincible / 4) % 2 === 0) return;
-  const bob = Math.abs(Math.sin(frame * 0.2)) * 1.4;
+  const speedRatio = Math.min(1, Math.abs(state.player.vx) / 4.2);
+  const bob = Math.abs(Math.sin(frame * (0.2 + speedRatio * 0.2))) * (1.4 + speedRatio * 1.2);
   const stride = Math.sin(frame * 0.38) * 2.9;
   const shoulderLift = Math.sin(frame * 0.5) * 1.5;
+  const lean = state.player.tilt * 0.08;
   ctx.save();
   ctx.translate(Math.round(x), Math.round(y + bob));
   ctx.scale(facing, 1);
+  ctx.rotate(lean);
+  ctx.fillStyle='rgba(0,0,0,0.28)';
+  ctx.fillRect(-11,28,22,4);
   // boots
   ctx.fillStyle='#1f0f05'; ctx.fillRect(-8+stride*0.35,24,8,8); ctx.fillRect(1-stride*0.35,24,8,8);
   ctx.fillStyle='#4e2a0d'; ctx.fillRect(-7+stride*0.35,24,6,3); ctx.fillRect(2-stride*0.35,24,6,3);
@@ -624,8 +631,18 @@ function drawGem(g) {
 function drawBullet(b) {
   const x = Math.round(b.x - state.camX), y = Math.round(b.y);
   ctx.save();
-  ctx.fillStyle='rgba(255,180,0,0.35)';
-  ctx.fillRect(x-8*b.dir,y-2,7,4);
+  const trailLen = 10 + Math.abs(b.vx) * 1.3;
+  const grad = ctx.createLinearGradient(x - b.dir * trailLen, y, x, y);
+  grad.addColorStop(0, 'rgba(255,120,0,0)');
+  grad.addColorStop(1, 'rgba(255,210,120,0.85)');
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x - b.dir * trailLen, y);
+  ctx.lineTo(x, y);
+  ctx.stroke();
+  ctx.fillStyle='rgba(255,180,0,0.45)';
+  ctx.fillRect(x-9*b.dir,y-2,7,4);
   ctx.fillStyle='#ffee66'; ctx.fillRect(x-3,y-1,7,3);
   ctx.fillStyle='#fff'; ctx.fillRect(x+3*b.dir,y-1,2,2);
   ctx.restore();
@@ -633,9 +650,12 @@ function drawBullet(b) {
 
 function drawEnemyShot(s) {
   const x = Math.round(s.x - state.camX), y = Math.round(s.y);
+  const flicker = Math.abs(Math.sin((frame + s.x) * 0.32));
   ctx.save();
-  ctx.fillStyle='#ff5522'; ctx.fillRect(x-2,y-2,4,4);
+  ctx.fillStyle=`rgba(255,85,34,${0.6 + flicker * 0.4})`; ctx.fillRect(x-3,y-3,6,6);
   ctx.fillStyle='#ffd27a'; ctx.fillRect(x-1,y-1,2,2);
+  ctx.fillStyle='rgba(255,120,60,0.35)';
+  ctx.fillRect(x - Math.sign(s.vx || 1) * 6, y - 1, 5, 2);
   ctx.restore();
 }
 
@@ -668,6 +688,13 @@ function drawWorld() {
   const L = LEVELS[state.level];
   ctx.fillStyle=L.bg[0]; ctx.fillRect(0,0,W,H/2);
   ctx.fillStyle=L.bg[1]; ctx.fillRect(0,H/2,W,H/2);
+  for (let i = 0; i < 5; i++) {
+    const cloudX = ((i * 190) - (state.camX * (0.08 + i * 0.01)) + frame * 0.18) % (W + 220) - 110;
+    const cloudY = 36 + i * 15 + Math.sin((frame + i * 13) * 0.01) * 3;
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.fillRect(cloudX, cloudY, 62, 12);
+    ctx.fillRect(cloudX + 12, cloudY - 6, 40, 8);
+  }
   // metal-slug style parallax jungle + ruins
   for (let i=0;i<6;i++) {
     const tx = ((i*150) - (state.camX*0.25)%900);
@@ -690,6 +717,11 @@ function drawWorld() {
     ctx.fillStyle='#fff';
     if (frame%60<30||i%3!==0) ctx.fillRect(sx,sy,1.5,1.5);
   }
+  for (let i = 0; i < 8; i++) {
+    const beamX = ((i * 120) - (state.camX * 0.6) - frame * 1.7) % (W + 100) - 50;
+    ctx.fillStyle='rgba(255,180,90,0.06)';
+    ctx.fillRect(beamX, 0, 3, H);
+  }
   // ground
   ctx.fillStyle='#2d1b00'; ctx.fillRect(0-state.camX%state.worldW,L.groundY,state.worldW+W,H);
   ctx.fillStyle='#1a5c1a'; ctx.fillRect(0-state.camX%state.worldW,L.groundY,state.worldW+W,8);
@@ -711,6 +743,8 @@ function spawnParticles(x, y, colors, n=8) {
       vx: (Math.random()-0.5)*4,
       vy: -Math.random()*4-1,
       life: 40,
+      maxLife: 40,
+      size: 2 + Math.random() * 3,
       color: colors[Math.floor(Math.random()*colors.length)]
     });
   }
@@ -724,6 +758,8 @@ function spawnSparkBurst(x, y, dir = 1, n = 6) {
       vx: dir * (2 + Math.random() * 3) + (Math.random()-0.5),
       vy: (Math.random()-0.5) * 1.5,
       life: 14 + Math.floor(Math.random() * 8),
+      maxLife: 22,
+      size: 1.5 + Math.random() * 2,
       color: ['#fffbc7', '#ffc65e', '#ff8f2e'][Math.floor(Math.random() * 3)]
     });
   }
@@ -737,6 +773,8 @@ function spawnShellCasings(x, y, dir = 1, n = 2) {
       vx: -dir * (1.2 + Math.random() * 2.2),
       vy: -1.5 - Math.random() * 2,
       life: 28 + Math.floor(Math.random() * 10),
+      maxLife: 38,
+      size: 1.8 + Math.random() * 2.2,
       color: ['#d7b97a', '#f4d77f', '#b38b42'][Math.floor(Math.random() * 3)]
     });
   }
@@ -747,13 +785,25 @@ function updateParticles() {
     p.x+=p.vx; p.y+=p.vy; p.vy+=0.15; p.life--;
     return p.life>0;
   });
+  state.trails = state.trails.filter(t => {
+    t.life--;
+    return t.life > 0;
+  });
+  if (state.trails.length > 240) state.trails.splice(0, state.trails.length - 240);
 }
 
 function drawParticles() {
   state.particles.forEach(p=>{
-    ctx.globalAlpha=p.life/40;
+    ctx.globalAlpha=p.life/(p.maxLife || 40);
     ctx.fillStyle=p.color;
-    ctx.fillRect(p.x-2,p.y-2,4,4);
+    const size = p.size || 3;
+    ctx.fillRect(p.x-size/2,p.y-size/2,size,size);
+  });
+  state.trails.forEach(t => {
+    const sx = t.x - state.camX;
+    ctx.globalAlpha = t.life / t.maxLife;
+    ctx.fillStyle = t.color;
+    ctx.fillRect(sx - t.w / 2, t.y - t.h / 2, t.w, t.h);
   });
   ctx.globalAlpha=1;
 }
@@ -830,6 +880,7 @@ function drawHUD() {
 function updatePlayer() {
   const p = state.player;
   const L = LEVELS[state.level];
+  const wasOnGround = p.onGround;
   const maxSpeed = 4.2;
   const accel = 0.58;
   const airAccel = 0.33;
@@ -878,6 +929,11 @@ function updatePlayer() {
       p.y=py-32; p.vy=0; p.onGround=true;
     }
   });
+  if (!wasOnGround && p.onGround) {
+    p.landingImpact = 10;
+    spawnParticles(p.x, p.y + 31, ['#f3cf8a', '#9e7d43', '#fff0c2'], 7);
+    addScreenShake(1.1, 3);
+  }
 
   // bounds
   if (p.x<20) p.x=20;
@@ -892,6 +948,25 @@ function updatePlayer() {
   if (state.fireCooldown>0) state.fireCooldown--;
   p.gunRecoil = Math.max(0, p.gunRecoil - 1);
   p.gunFlash = Math.max(0, p.gunFlash - 1);
+  p.runDustTimer = Math.max(0, p.runDustTimer - 1);
+  p.landingImpact = Math.max(0, p.landingImpact - 1);
+  p.tilt += ((p.vx * 6) - p.tilt) * 0.2;
+
+  if (p.onGround && Math.abs(p.vx) > 1.5 && p.runDustTimer === 0) {
+    spawnParticles(p.x - p.facing * 8, p.y + 30, ['#d8b57a','#b48a53','#6a4e31'], 3);
+    p.runDustTimer = 4;
+  }
+  if ((Math.abs(p.vx) > 2.8 || Math.abs(p.vy) > 3.5) && frame % 2 === 0) {
+    state.trails.push({
+      x: p.x,
+      y: p.y + 12,
+      w: 12,
+      h: 20,
+      life: 6,
+      maxLife: 6,
+      color: 'rgba(255,105,180,0.18)'
+    });
+  }
 
   // camera
   state.camX = Math.max(0, Math.min(state.worldW-W, p.x-W*0.4));
@@ -920,6 +995,15 @@ function fireShot() {
   p.gunRecoil = 6;
   p.gunFlash = 4;
   p.shootTimer = 8;
+  state.trails.push({
+    x: p.x + p.facing * 20,
+    y: p.y + 10,
+    w: 28,
+    h: 4,
+    life: 5,
+    maxLife: 5,
+    color: 'rgba(255,240,150,0.7)'
+  });
   spawnParticles(p.x+p.facing*16, p.y+10, ['#fff799','#ff8c00','#ffd700'], 5);
   spawnParticles(p.x+p.facing*8, p.y+8, ['#c2a35f','#f0d28a'], 2);
   spawnSparkBurst(p.x + p.facing*16, p.y + 10, p.facing, 7);
@@ -1069,6 +1153,15 @@ function updateEnemyShots() {
   state.enemyShots = state.enemyShots.filter(s => {
     s.x += s.vx;
     s.y += s.vy;
+    state.trails.push({
+      x: s.x,
+      y: s.y,
+      w: 8,
+      h: 2,
+      life: 4,
+      maxLife: 4,
+      color: 'rgba(255,110,60,0.35)'
+    });
     s.life--;
     if (s.life <= 0 || s.x < 0 || s.x > state.worldW || s.y < -20 || s.y > H + 20) return false;
 
