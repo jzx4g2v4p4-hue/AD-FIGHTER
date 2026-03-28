@@ -195,7 +195,55 @@ function drawCrowdScene(ctx, W, H, f) {
   ctx.globalAlpha=1;
 }
 
-function drawPOVBase(ctx, W, H, f, characterName, shirtColor, speechColor) {
+function drawSupportSprite(ctx, x, y, opts = {}) {
+  const {
+    shirtColor = '#9ec5ff',
+    skinColor = '#d6a370',
+    hairColor = '#2b1b08',
+    accentColor = '#ffffff',
+    glasses = false,
+    hat = false,
+    beard = false,
+    longHair = false
+  } = opts;
+  const bob = opts.bob || 0;
+  const blink = Math.sin(opts.frame * 0.08) > 0.82;
+
+  // torso + jacket
+  ctx.fillStyle='#5e3521'; ctx.fillRect(x, y + bob, 68, 86);
+  ctx.fillStyle=shirtColor; ctx.fillRect(x + 9, y + 33 + bob, 50, 34);
+  ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.fillRect(x + 16, y + 36 + bob, 10, 24);
+  // neck + head
+  ctx.fillStyle=skinColor; ctx.fillRect(x + 28, y + 24 + bob, 12, 10);
+  ctx.fillStyle=skinColor; ctx.fillRect(x + 20, y + 10 + bob, 28, 24);
+
+  if (longHair) { ctx.fillStyle=hairColor; ctx.fillRect(x + 16, y + 10 + bob, 36, 24); }
+  if (hat) {
+    ctx.fillStyle=hairColor; ctx.fillRect(x + 16, y + 6 + bob, 36, 7);
+    ctx.fillStyle=accentColor; ctx.fillRect(x + 22, y + 8 + bob, 12, 3);
+  } else {
+    ctx.fillStyle=hairColor; ctx.fillRect(x + 19, y + 7 + bob, 30, 8);
+  }
+
+  ctx.fillStyle='#1d120b'; // eyes
+  if (!blink) {
+    ctx.fillRect(x + 26, y + 20 + bob, 4, 3);
+    ctx.fillRect(x + 38, y + 20 + bob, 4, 3);
+  } else {
+    ctx.fillRect(x + 25, y + 21 + bob, 5, 1);
+    ctx.fillRect(x + 37, y + 21 + bob, 5, 1);
+  }
+  if (glasses) {
+    ctx.fillStyle='#111';
+    ctx.fillRect(x + 24, y + 18 + bob, 7, 5);
+    ctx.fillRect(x + 37, y + 18 + bob, 7, 5);
+    ctx.fillRect(x + 31, y + 19 + bob, 6, 2);
+  }
+  if (beard) { ctx.fillStyle=hairColor; ctx.fillRect(x + 23, y + 28 + bob, 22, 7); }
+  ctx.fillStyle='#c2786b'; ctx.fillRect(x + 30, y + 27 + bob, 8, 2); // mouth
+}
+
+function drawPOVBase(ctx, W, H, f, characterName, shirtColor, speechColor, charOpts = {}) {
   const pulse = Math.sin(f * 0.08) * 0.05 + 0.08;
   // painterly dusk background blocks for pseudo-real pixel look
   for (let y=0; y<H; y+=12) {
@@ -214,12 +262,10 @@ function drawPOVBase(ctx, W, H, f, characterName, shirtColor, speechColor) {
   ctx.fillStyle='#d6a370'; ctx.fillRect(16,H-72,44,42);
   ctx.fillStyle='#f4ba7f'; ctx.fillRect(14,H-60,22,32);
   ctx.fillStyle='#ffb54d'; ctx.fillRect(42,H-96,30,30); // hair block
-  // target character right-midground
+  // target character right-midground (improved sprite detail + idle animation)
   const tx = W - 118;
   const ty = H - 104 + Math.sin(f*0.09)*2;
-  ctx.fillStyle='#6d3f24'; ctx.fillRect(tx, ty, 66, 86);
-  ctx.fillStyle=shirtColor; ctx.fillRect(tx+8, ty+32, 50, 30);
-  ctx.fillStyle='#d6a370'; ctx.fillRect(tx+20, ty+10, 24, 24);
+  drawSupportSprite(ctx, tx, ty, { ...charOpts, shirtColor, frame: f, bob: Math.sin(f * 0.09) * 2 });
   // cinematic bars
   ctx.fillStyle='rgba(0,0,0,0.35)'; ctx.fillRect(0,0,W,14); ctx.fillRect(0,H-14,W,14);
   // dialogue panel
@@ -230,51 +276,64 @@ function drawPOVBase(ctx, W, H, f, characterName, shirtColor, speechColor) {
 }
 
 function drawPovRoxie(ctx, W, H, f) {
-  drawPOVBase(ctx, W, H, f, 'ROXIE', '#36d1ff', '#7fe9ff');
+  drawPOVBase(ctx, W, H, f, 'ROXIE', '#36d1ff', '#7fe9ff', {
+    longHair: true,
+    hairColor: '#ff6db8',
+    accentColor: '#ffd6ef'
+  });
   ctx.fillStyle='#b8f7ff'; ctx.font='11px monospace'; ctx.textAlign='center';
   ctx.fillText('"You are not late to your own life."', W/2, 63);
 }
 
 function drawPovCharly(ctx, W, H, f) {
-  drawPOVBase(ctx, W, H, f, 'CHARLY', '#9ec5ff', '#d9e9ff');
-  // glasses + taller silhouette
-  const tx = W - 118;
-  const ty = H - 104 + Math.sin(f*0.09)*2;
-  ctx.fillStyle='#222'; ctx.fillRect(tx+18,ty+18,8,2); ctx.fillRect(tx+30,ty+18,8,2); ctx.fillRect(tx+26,ty+18,4,2);
+  drawPOVBase(ctx, W, H, f, 'CHARLY', '#9ec5ff', '#d9e9ff', {
+    glasses: true,
+    hairColor: '#2d1f12'
+  });
   ctx.fillStyle='#d9e9ff'; ctx.font='11px monospace'; ctx.textAlign='center';
   ctx.fillText('"I believe in you. You are always in my heart."', W/2, 60);
 }
 
 function drawPovJules(ctx, W, H, f) {
-  drawPOVBase(ctx, W, H, f, 'JULES', '#ff7e9f', '#ffc7d8');
+  drawPOVBase(ctx, W, H, f, 'JULES', '#ff7e9f', '#ffc7d8', {
+    longHair: true,
+    hairColor: '#5f2a8a'
+  });
   ctx.fillStyle='#ffdbe7'; ctx.font='11px monospace'; ctx.textAlign='center';
   ctx.fillText('"Breathe. Aim true. Your story is valid."', W/2, 63);
 }
 
 function drawPovJairo(ctx, W, H, f) {
-  drawPOVBase(ctx, W, H, f, 'JAIRO', '#ffcf6a', '#ffe7b3');
-  // hat + beard accents
-  const tx = W - 118;
-  const ty = H - 104 + Math.sin(f*0.09)*2;
-  ctx.fillStyle='#5b3a12'; ctx.fillRect(tx+14,ty+7,30,6);
-  ctx.fillStyle='#2d1b08'; ctx.fillRect(tx+20,ty+26,18,8);
+  drawPOVBase(ctx, W, H, f, 'JAIRO', '#ffcf6a', '#ffe7b3', {
+    hat: true,
+    beard: true,
+    hairColor: '#2d1b08',
+    accentColor: '#f3d57d'
+  });
   ctx.fillStyle='#fff0cc'; ctx.font='11px monospace'; ctx.textAlign='center';
   ctx.fillText('"You are seen, querido. Keep that fire."', W/2, 60);
 }
 
 function drawPovChris(ctx, W, H, f) {
-  drawPOVBase(ctx, W, H, f, 'CHRIS', '#89f2c4', '#d6ffe8');
+  drawPOVBase(ctx, W, H, f, 'CHRIS', '#89f2c4', '#d6ffe8', {
+    beard: true,
+    hairColor: '#2b1b10'
+  });
   // ex-military patch + bigger beard accent
   const tx = W - 118;
   const ty = H - 104 + Math.sin(f*0.09)*2;
   ctx.fillStyle='#335f44'; ctx.fillRect(tx+6,ty+36,9,9);
-  ctx.fillStyle='#2b1b10'; ctx.fillRect(tx+18,ty+26,18,9);
   ctx.fillStyle='#e3fff2'; ctx.font='11px monospace'; ctx.textAlign='center';
   ctx.fillText('"You got this, brother. Laugh and move."', W/2, 60);
 }
 
 function drawPovMarco(ctx, W, H, f) {
-  drawPOVBase(ctx, W, H, f, 'MARCO', '#90ff90', '#d4ffd4');
+  drawPOVBase(ctx, W, H, f, 'MARCO', '#90ff90', '#d4ffd4', {
+    glasses: true,
+    longHair: true,
+    hairColor: '#1a3e1a',
+    accentColor: '#d9ffd9'
+  });
   ctx.fillStyle='#e8ffe8'; ctx.font='11px monospace'; ctx.textAlign='center';
   ctx.fillText('"We got your six, Greg. Keep moving."', W/2, 63);
 }
