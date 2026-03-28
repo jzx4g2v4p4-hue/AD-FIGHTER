@@ -16,8 +16,11 @@ function paintScene(canvas, sceneId, frame) {
     case 'intro_door':      drawDoor(ctx, W, H, frame);      break;
     case 'level1_trans':    drawCityDawn(ctx, W, H, frame);  break;
     case 'pov_roxie':       drawPovRoxie(ctx, W, H, frame);  break;
+    case 'pov_charly':      drawPovCharly(ctx, W, H, frame); break;
     case 'level2_trans':    drawCrowdScene(ctx, W, H, frame);break;
     case 'pov_jules':       drawPovJules(ctx, W, H, frame);  break;
+    case 'pov_jairo':       drawPovJairo(ctx, W, H, frame);  break;
+    case 'pov_chris':       drawPovChris(ctx, W, H, frame);  break;
     case 'pov_marco':       drawPovMarco(ctx, W, H, frame);  break;
     case 'boss_intro':      drawBossIntro(ctx, W, H, frame); break;
     case 'victory':         drawVictory(ctx, W, H, frame);   break;
@@ -218,10 +221,36 @@ function drawPovRoxie(ctx, W, H, f) {
   ctx.fillText('"You are not late to your own life."', W/2, 63);
 }
 
+function drawPovCharly(ctx, W, H, f) {
+  drawPOVBase(ctx, W, H, f, 'CHARLY', '#9ec5ff', '#d9e9ff');
+  // glasses + taller silhouette
+  ctx.fillStyle='#222'; ctx.fillRect(W/2-10,H-116,9,2); ctx.fillRect(W/2+1,H-116,9,2); ctx.fillRect(W/2-1,H-116,2,2);
+  ctx.fillStyle='#d9e9ff'; ctx.font='11px monospace'; ctx.textAlign='center';
+  ctx.fillText('"I believe in you. You are always in my heart."', W/2, 63);
+}
+
 function drawPovJules(ctx, W, H, f) {
   drawPOVBase(ctx, W, H, f, 'JULES', '#ff7e9f', '#ffc7d8');
   ctx.fillStyle='#ffdbe7'; ctx.font='11px monospace'; ctx.textAlign='center';
   ctx.fillText('"Breathe. Aim true. Your story is valid."', W/2, 63);
+}
+
+function drawPovJairo(ctx, W, H, f) {
+  drawPOVBase(ctx, W, H, f, 'JAIRO', '#ffcf6a', '#ffe7b3');
+  // hat + beard accents
+  ctx.fillStyle='#5b3a12'; ctx.fillRect(W/2-12,H-120,24,5);
+  ctx.fillStyle='#2d1b08'; ctx.fillRect(W/2-7,H-101,14,7);
+  ctx.fillStyle='#fff0cc'; ctx.font='11px monospace'; ctx.textAlign='center';
+  ctx.fillText('"You are seen, querido. Keep that fire."', W/2, 63);
+}
+
+function drawPovChris(ctx, W, H, f) {
+  drawPOVBase(ctx, W, H, f, 'CHRIS', '#89f2c4', '#d6ffe8');
+  // ex-military patch + bigger beard accent
+  ctx.fillStyle='#335f44'; ctx.fillRect(W/2-16,H-98,8,8);
+  ctx.fillStyle='#2b1b10'; ctx.fillRect(W/2-8,H-101,16,8);
+  ctx.fillStyle='#e3fff2'; ctx.font='11px monospace'; ctx.textAlign='center';
+  ctx.fillText('"You got this, brother. Laugh and move."', W/2, 63);
 }
 
 function drawPovMarco(ctx, W, H, f) {
@@ -351,6 +380,15 @@ const CUTSCENES = {
         "\"You're not broken,\" she says. \"You're becoming.\"",
         "Greg nods. He checks his Glock, breathes, and heads back into the street."
       ]
+    },
+    {
+      scene: 'pov_charly',
+      title: 'POV: Charly\'s Promise',
+      lines: [
+        "Charly — tall, slim, glasses catching the streetlight — wraps Greg in a steady hug.",
+        "Their marriage was a cover, but their bond is real and deep.",
+        "\"I believe in you,\" Charly says. \"You will always be in my heart.\""
+      ]
     }
   ],
 
@@ -377,6 +415,24 @@ const CUTSCENES = {
         "\"You're doing it,\" Jules says. \"Every step is proof.\"",
         "Greg tightens his grip and keeps pushing toward the parade route."
       ]
+    },
+    {
+      scene: 'pov_jairo',
+      title: 'POV: Jairo Steps In',
+      lines: [
+        "Jairo Short appears — buff, bearded, Latino, hat tilted low and confident smile ready.",
+        "\"Come here,\" Jairo says, touching Greg's shoulder. \"You don't fight alone.\"",
+        "Greg feels his chest open. This love is brave, loud, and real."
+      ]
+    },
+    {
+      scene: 'pov_chris',
+      title: 'POV: Chris Brings The Laugh',
+      lines: [
+        "Chris arrives, ex-military and goofy, long beard bouncing as he jogs in.",
+        "\"Tactical plan: be yourself and wreck doubt,\" Chris jokes.",
+        "Greg laughs out loud. Then he reloads and charges forward with both men beside him."
+      ]
     }
   ],
 
@@ -387,7 +443,7 @@ const CUTSCENES = {
       lines: [
         "Music thumps from a distant block party as Marco jogs up beside Greg.",
         "\"No more hiding,\" Marco says. \"Let's clear this last street together.\"",
-        "Greg smiles. One final level. One final battle against SHAME."
+        "Charly, Jairo, and Chris stand behind him — chosen family and true love all in one frame."
       ]
     },
     {
@@ -395,7 +451,7 @@ const CUTSCENES = {
       title: 'Final Approach',
       lines: [
         "The sky burns red as SHAME gathers for one last stand.",
-        "Greg hears every ally in his mind: Roxie, Jules, Marco — and his own voice, strongest of all.",
+        "Greg hears every ally in his mind: Charly, Jairo, Chris, Roxie, Jules, Marco — and his own voice, strongest of all.",
         "He chambers a round, steps forward, and chooses himself."
       ]
     }
@@ -409,8 +465,8 @@ const CUTSCENES = {
       lines: [
         "The Shame Boss shatters into a thousand pieces of light.",
         "Greg stands tall — mohawk blazing, beard fierce, heart open.",
-        "He is not perfect. He is not finished. But he is FREE.",
-        "Greg Mills is a proud gay man, and the world is lucky to know him."
+        "Charly smiles with tears in her eyes while Jairo and Chris pull Greg into a laughing embrace.",
+        "He is not perfect. He is not finished. But he is FREE — and deeply loved."
       ]
     }
   ]

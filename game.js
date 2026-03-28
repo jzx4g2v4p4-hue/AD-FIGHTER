@@ -79,7 +79,7 @@ const keys = {};
 const prevKeys = {};
 document.addEventListener('keydown', e => {
   keys[e.code] = true;
-  if (['Space','ArrowUp','ArrowLeft','ArrowRight','ArrowDown','KeyJ','KeyK','KeyX'].includes(e.code)) e.preventDefault();
+  if (['Space','ArrowUp','ArrowLeft','ArrowRight','ArrowDown','KeyJ','KeyK','KeyX','KeyL'].includes(e.code)) e.preventDefault();
 });
 document.addEventListener('keyup', e => { keys[e.code] = false; });
 
@@ -102,18 +102,24 @@ function initLevel(li) {
     gems:     L.gems.map(g => ({ x:g[0], y:g[1], collected:false })),
     enemies:  L.enemies.map(e => ({
       x:e.x, y:e.y, dir:e.dir, vx:1.2*e.dir, alive:true, hp:2,
-      minX: Math.max(24, e.x - 95), maxX: Math.min((L.worldW || 700) - 24, e.x + 95)
+      minX: Math.max(24, e.x - 95), maxX: Math.min((L.worldW || 700) - 24, e.x + 95),
+      fireTimer: 45 + Math.floor(Math.random()*80)
     })),
     boss:     L.bossX ? { x:L.bossX, y:220, hp:8, maxHp:8, dir:-1, alive:true, atkTimer:0 } : null,
     bullets:  [],
+    enemyShots: [],
+    explosions: [],
     particles: [],
     fireCooldown: 0,
+    bombCooldown: 0,
+    bombs: 6,
     msgTimer:  180,
     msgText:   L.msg,
     levelName: L.name,
     camX:      0,
     worldW:    L.worldW || 700,
-    complete:  false
+    complete:  false,
+    levelIntroTimer: 90
   };
 }
 
@@ -127,7 +133,7 @@ function buildStartScreen() {
     <div class="pixel-sub">a journey to self-acceptance</div>
     <div class="rainbow-bar">${PRIDE_COLS.map(c=>`<div style="background:${c}"></div>`).join('')}</div>
     <button class="start-btn" id="startBtn">PRESS START</button>
-    <div class="controls">Arrow Keys / WASD — Move &amp; Jump &nbsp;|&nbsp; Space — Jump &nbsp;|&nbsp; J / K / X — Fire<br>Run-and-gun your doubts, talk to allies in POV cutscenes, and keep advancing</div>
+    <div class="controls">Arrow Keys / WASD — Move &amp; Jump &nbsp;|&nbsp; Space — Jump &nbsp;|&nbsp; J / K / X — Fire &nbsp;|&nbsp; L — Bomb<br>Metal-Slug energy: bullets, bombs, and full action across every mission</div>
   `;
   gc.appendChild(s);
   document.getElementById('startBtn').addEventListener('click', beginGame);
@@ -271,6 +277,28 @@ function drawBullet(b) {
   ctx.restore();
 }
 
+function drawEnemyShot(s) {
+  const x = Math.round(s.x - state.camX), y = Math.round(s.y);
+  ctx.save();
+  ctx.fillStyle='#ff5522'; ctx.fillRect(x-2,y-2,4,4);
+  ctx.fillStyle='#ffd27a'; ctx.fillRect(x-1,y-1,2,2);
+  ctx.restore();
+}
+
+function drawExplosions() {
+  state.explosions.forEach(ex=>{
+    const x = Math.round(ex.x - state.camX), y = Math.round(ex.y);
+    const r = Math.max(4, ex.radius * (ex.life / ex.maxLife));
+    ctx.save();
+    ctx.globalAlpha = ex.life / ex.maxLife;
+    ctx.fillStyle='rgba(255,120,30,0.8)';
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,220,120,0.9)';
+    ctx.beginPath(); ctx.arc(x, y, r*0.45, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  });
+}
+
 // ---- DRAW WORLD ----
 function drawWorld() {
   const L = LEVELS[state.level];
@@ -347,6 +375,7 @@ function drawHUD() {
   const collected = state.gems.filter(g=>g.collected).length;
   ctx.fillStyle='#ffd700'; ctx.font='12px monospace'; ctx.textAlign='left';
   ctx.fillText('★ '+collected+'/'+state.gems.length, 10, 42);
+  ctx.fillStyle='#ffb347'; ctx.fillText('BOMBS '+state.bombs, 86, 42);
   // message
   if (state.msgTimer > 0){
     const alpha = Math.min(1, state.msgTimer/30);
@@ -356,6 +385,19 @@ function drawHUD() {
     ctx.fillText(state.msgText, W/2, H-30);
     ctx.globalAlpha=1;
     state.msgTimer--;
+  }
+
+  if (state.levelIntroTimer > 0) {
+    const pulse = Math.abs(Math.sin(frame*0.18))*0.25 + 0.72;
+    ctx.globalAlpha = pulse;
+    ctx.fillStyle='rgba(0,0,0,0.6)';
+    ctx.fillRect(W/2-190, H/2-42, 380, 84);
+    ctx.strokeStyle='#ff7a2f'; ctx.lineWidth=2; ctx.strokeRect(W/2-190, H/2-42, 380, 84);
+    ctx.fillStyle='#fff';
+    ctx.font='bold 16px monospace'; ctx.textAlign='center';
+    ctx.fillText(`MISSION ${state.level+1} START!`, W/2, H/2+8);
+    ctx.globalAlpha = 1;
+    state.levelIntroTimer--;
   }
 }
 
@@ -457,6 +499,46 @@ function updateShooting() {
   }
 }
 
+function spawnExplosion(x, y, radius = 56) {
+  state.explosions.push({ x, y, radius, life: 18, maxLife: 18 });
+  spawnParticles(x, y, ['#ffef99','#ff9433','#ff3300'], 26);
+}
+
+function updateBombs() {
+  if (state.bombCooldown > 0) state.bombCooldown--;
+  if (justPressed('KeyL') && state.bombs > 0 && state.bombCooldown === 0) {
+    const p = state.player;
+    state.bombs--;
+    state.bombCooldown = 24;
+    spawnExplosion(p.x + p.facing * 68, p.y + 10, 76);
+  }
+}
+
+function updateExplosions() {
+  state.explosions = state.explosions.filter(ex => {
+    ex.life--;
+    const damageWindow = ex.life === ex.maxLife - 1;
+    if (damageWindow) {
+      state.enemies.forEach(e => {
+        if (!e.alive) return;
+        if (Math.hypot(e.x - ex.x, (e.y - 10) - ex.y) < ex.radius) {
+          e.alive = false;
+          spawnParticles(e.x, e.y, PRIDE_COLS, 18);
+        }
+      });
+      if (state.boss && state.boss.alive && Math.hypot(state.boss.x - ex.x, state.boss.y - ex.y) < ex.radius + 16) {
+        state.boss.hp = Math.max(0, state.boss.hp - 2);
+        spawnParticles(state.boss.x, state.boss.y, ['#ffcc66','#ff3333','#fff'], 20);
+        if (state.boss.hp <= 0) {
+          state.boss.alive = false;
+          spawnParticles(state.boss.x, state.boss.y, PRIDE_COLS, 30);
+        }
+      }
+    }
+    return ex.life > 0;
+  });
+}
+
 function updateBullets() {
   state.bullets = state.bullets.filter(b=>{
     b.x+=b.vx;
@@ -491,6 +573,45 @@ function updateBullets() {
     }
 
     return !hit;
+  });
+}
+
+function updateEnemyShots() {
+  const p = state.player;
+
+  state.enemies.forEach(e => {
+    if (!e.alive) return;
+    e.fireTimer--;
+    if (e.fireTimer <= 0) {
+      const dx = p.x - e.x;
+      const dy = (p.y + 8) - (e.y - 8);
+      const len = Math.max(1, Math.hypot(dx, dy));
+      state.enemyShots.push({ x:e.x, y:e.y-8, vx:(dx/len)*3.2, vy:(dy/len)*3.2, life:140 });
+      e.fireTimer = 72 + Math.floor(Math.random()*60);
+    }
+  });
+
+  if (state.boss && state.boss.alive && state.boss.atkTimer % 35 === 0) {
+    const dx = p.x - state.boss.x;
+    const dy = (p.y + 8) - (state.boss.y - 10);
+    const len = Math.max(1, Math.hypot(dx, dy));
+    state.enemyShots.push({ x:state.boss.x, y:state.boss.y-8, vx:(dx/len)*4.2, vy:(dy/len)*4.2, life:130 });
+  }
+
+  state.enemyShots = state.enemyShots.filter(s => {
+    s.x += s.vx;
+    s.y += s.vy;
+    s.life--;
+    if (s.life <= 0 || s.x < 0 || s.x > state.worldW || s.y < -20 || s.y > H + 20) return false;
+
+    if (p.invincible===0 && Math.abs(p.x-s.x)<12 && Math.abs((p.y+14)-s.y)<18){
+      p.hp=Math.max(0,p.hp-1);
+      p.invincible=75;
+      p.vy=-4;
+      spawnParticles(p.x, p.y, ['#ff2200','#ff8800','#fff'], 8);
+      return false;
+    }
+    return true;
   });
 }
 
@@ -570,7 +691,10 @@ function loop() {
   frame++;
   updatePlayer();
   updateShooting();
+  updateBombs();
   updateBullets();
+  updateEnemyShots();
+  updateExplosions();
   updateEnemies();
   updateBoss();
   updateParticles();
@@ -580,6 +704,8 @@ function loop() {
   drawWorld();
   state.gems.forEach(drawGem);
   state.bullets.forEach(drawBullet);
+  state.enemyShots.forEach(drawEnemyShot);
+  drawExplosions();
   state.enemies.forEach(drawEnemy);
   if (state.boss) drawBoss(state.boss);
   drawGreg(
