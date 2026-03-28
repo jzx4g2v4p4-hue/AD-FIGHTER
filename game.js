@@ -61,14 +61,38 @@ const LEVELS = [
     afterCutscene: 'after_level4'
   },
   {
+    name:      "Iron Rain District",
+    bg:        ['#0f0f1f','#342c54'],
+    groundY:   300,
+    worldW:    1180,
+    platforms: [[110,245,110],[300,200,100],[460,165,110],[640,220,95],[820,185,110],[980,225,100]],
+    gems:      [[140,225],[330,180],[490,145],[670,200],[850,165],[1010,205]],
+    enemies:   [{x:180,y:288,dir:1},{x:360,y:288,dir:-1},{x:520,y:288,dir:1},{x:730,y:288,dir:-1},{x:920,y:288,dir:1},{x:1080,y:288,dir:-1}],
+    bossX:     null,
+    msg:       "Heavy resistance. Keep rolling, firing, and breaking through.",
+    afterCutscene: 'after_level4'
+  },
+  {
+    name:      "Steel Sky Highway",
+    bg:        ['#071f29','#12576d'],
+    groundY:   300,
+    worldW:    1260,
+    platforms: [[140,248,95],[310,215,100],[490,180,95],[660,145,100],[820,210,95],[980,178,100],[1130,225,85]],
+    gems:      [[170,228],[340,195],[520,160],[690,125],[850,190],[1010,158],[1155,205]],
+    enemies:   [{x:220,y:288,dir:1},{x:410,y:288,dir:-1},{x:590,y:288,dir:1},{x:760,y:288,dir:-1},{x:930,y:288,dir:1},{x:1110,y:288,dir:-1}],
+    bossX:     null,
+    msg:       "Final gauntlet. This is full run-and-gun chaos.",
+    afterCutscene: 'after_level4'
+  },
+  {
     name:      "Face Yourself",
     bg:        ['#1a0000','#4d0000'],
     groundY:   300,
-    worldW:    860,
-    platforms: [[120,240,90],[280,200,90],[460,240,90]],
-    gems:      [[145,220],[305,180],[485,220]],
+    worldW:    980,
+    platforms: [[120,240,100],[290,198,95],[470,240,95],[640,205,95]],
+    gems:      [[145,220],[315,178],[495,220],[665,185]],
     enemies:   [],
-    bossX:     520,
+    bossX:     700,
     msg:       "Defeat the Shame Boss — shoot your doubts away!",
     afterCutscene: 'victory'
   }
@@ -97,7 +121,7 @@ function initLevel(li) {
     level: li,
     player: {
       x:60, y:260, vx:0, vy:0, onGround:false, facing:1, hp:3, maxHp:3, invincible:0,
-      coyote: 0, gunRecoil: 0, gunFlash: 0
+      coyote: 0, gunRecoil: 0, gunFlash: 0, runFrame: 0
     },
     gems:     L.gems.map(g => ({ x:g[0], y:g[1], collected:false })),
     enemies:  L.enemies.map(e => ({
@@ -178,34 +202,39 @@ function beginGame() {
 function drawGreg(x, y, facing, invincible, gunRecoil = 0, gunFlash = 0) {
   if (invincible > 0 && Math.floor(invincible / 4) % 2 === 0) return;
   const bob = Math.abs(Math.sin(frame * 0.2)) * 1.4;
-  const stride = Math.sin(frame * 0.35) * 2.4;
+  const stride = Math.sin(frame * 0.38) * 2.9;
+  const shoulderLift = Math.sin(frame * 0.5) * 1.5;
   ctx.save();
   ctx.translate(Math.round(x), Math.round(y + bob));
   ctx.scale(facing, 1);
   // boots
-  ctx.fillStyle='#1f0f05'; ctx.fillRect(-7+stride*0.3,24,7,8); ctx.fillRect(2-stride*0.3,24,7,8);
-  ctx.fillStyle='#4e2a0d'; ctx.fillRect(-6+stride*0.3,24,5,3); ctx.fillRect(3-stride*0.3,24,5,3);
+  ctx.fillStyle='#1f0f05'; ctx.fillRect(-8+stride*0.35,24,8,8); ctx.fillRect(1-stride*0.35,24,8,8);
+  ctx.fillStyle='#4e2a0d'; ctx.fillRect(-7+stride*0.35,24,6,3); ctx.fillRect(2-stride*0.35,24,6,3);
   // pants
-  ctx.fillStyle='#131b54'; ctx.fillRect(-7,14,14,12);
-  ctx.fillStyle='#2f3a88'; ctx.fillRect(-4+stride*0.3,14,3,10); ctx.fillRect(1-stride*0.3,14,3,10);
+  ctx.fillStyle='#131b54'; ctx.fillRect(-8,14,16,12);
+  ctx.fillStyle='#2f3a88'; ctx.fillRect(-5+stride*0.25,14,3,10); ctx.fillRect(2-stride*0.25,14,3,10);
   // belt
-  ctx.fillStyle='#5f2f0d'; ctx.fillRect(-7,12,14,4);
+  ctx.fillStyle='#5f2f0d'; ctx.fillRect(-8,12,16,4);
   ctx.fillStyle='#ffd700'; ctx.fillRect(-2,12,4,4);
   // shirt (pride colours cycle)
-  ctx.fillStyle='#ff4aa8'; ctx.fillRect(-8,2,16,12);
-  ctx.fillStyle='#ffa4d4'; ctx.fillRect(-5,3,10,3);
+  ctx.fillStyle='#ff4aa8'; ctx.fillRect(-9,2,18,12);
+  ctx.fillStyle='#ffa4d4'; ctx.fillRect(-5,3,11,3);
+  ctx.fillStyle='rgba(255,255,255,0.16)'; ctx.fillRect(-8,4,4,8);
   // arms
-  ctx.fillStyle='#a76935'; ctx.fillRect(-12,2+stride*0.2,5,10); ctx.fillRect(8,2-stride*0.2,5,10);
-  ctx.fillStyle='#d59b58'; ctx.fillRect(-11,2+stride*0.2,3,4); ctx.fillRect(9,2-stride*0.2,3,4);
+  ctx.fillStyle='#a76935'; ctx.fillRect(-13,2+stride*0.2+shoulderLift*0.2,5,10); ctx.fillRect(8,2-stride*0.25-shoulderLift*0.35,5,10);
+  ctx.fillStyle='#d59b58'; ctx.fillRect(-12,2+stride*0.2,3,4); ctx.fillRect(9,2-stride*0.2,3,4);
   // animated Glock-style sidearm + slide recoil
   const recoil = Math.min(4, gunRecoil);
-  ctx.fillStyle='#101010'; ctx.fillRect(10-recoil,7,11,5);      // slide
+  ctx.fillStyle='#101010'; ctx.fillRect(10-recoil,7-shoulderLift*0.35,11,5);      // slide
   ctx.fillStyle='#2b2b2b'; ctx.fillRect(10,12,7,4);             // frame
   ctx.fillStyle='#111'; ctx.fillRect(12,14,3,4);                // grip
-  ctx.fillStyle='#888'; ctx.fillRect(20-recoil,9,4,2);          // barrel
+  ctx.fillStyle='#888'; ctx.fillRect(20-recoil,9-shoulderLift*0.35,5,2);          // barrel
+  ctx.fillStyle='rgba(180,200,255,0.25)'; ctx.fillRect(12,8,5,1);
   if (gunFlash > 0) {
-    ctx.fillStyle='rgba(255,240,120,0.95)'; ctx.fillRect(24,7,4,5);
-    ctx.fillStyle='rgba(255,130,0,0.85)';   ctx.fillRect(28,8,3,3);
+    const flashGrow = 6 - gunFlash;
+    ctx.fillStyle='rgba(255,240,120,0.95)'; ctx.fillRect(24,6,5+flashGrow,6);
+    ctx.fillStyle='rgba(255,170,0,0.88)';   ctx.fillRect(28+flashGrow,7,4,4);
+    ctx.fillStyle='rgba(255,90,0,0.7)';     ctx.fillRect(31+flashGrow,8,3,2);
   }
   // head
   ctx.fillStyle='#b87843'; ctx.fillRect(-6,-10,13,14);
@@ -229,12 +258,16 @@ function drawEnemy(e) {
   if (!e.alive) return;
   const x = Math.round(e.x - state.camX), y = Math.round(e.y);
   const wobble = Math.sin(frame * 0.25 + e.x * 0.03) * 2;
+  const step = Math.sin(frame * 0.38 + e.x * 0.06) * 2;
   ctx.save();
-  ctx.fillStyle='#240039'; ctx.fillRect(x-11,y-18+wobble,22,20);
-  ctx.fillStyle='#7e39d9'; ctx.fillRect(x-8,y-20+wobble,16,8);
+  ctx.fillStyle='#1f0038'; ctx.fillRect(x-12,y-18+wobble,24,20);
+  ctx.fillStyle='#7e39d9'; ctx.fillRect(x-9,y-20+wobble,18,8);
   ctx.fillStyle='#c494ff'; ctx.fillRect(x-6,y-19+wobble,5,2); ctx.fillRect(x+1,y-19+wobble,5,2);
   ctx.fillStyle='#ff1a1a'; ctx.fillRect(x-5,y-16+wobble,4,4); ctx.fillRect(x+2,y-16+wobble,4,4);
+  ctx.fillStyle='#130022'; ctx.fillRect(x-13,y-10+wobble,4,8); ctx.fillRect(x+9,y-10+wobble,4,8);
   ctx.fillStyle='#1a0030'; ctx.fillRect(x-8,y-26+wobble,4,10); ctx.fillRect(x+4,y-26+wobble,4,10);
+  ctx.fillStyle='#2d0b44'; ctx.fillRect(x-8+step*0.35,y+2,6,6); ctx.fillRect(x+2-step*0.35,y+2,6,6);
+  ctx.fillStyle='#7dfcff'; ctx.fillRect(x+(e.vx>0?8:-11),y-8+wobble,3,2);
   ctx.fillStyle='rgba(200,100,255,0.7)';
   ctx.font='7px monospace'; ctx.textAlign='center';
   ctx.fillText('DOUBT', x, y-30+wobble);
@@ -246,14 +279,17 @@ function drawBoss(b) {
   if (!b.alive) return;
   const x = Math.round(b.x - state.camX), y = Math.round(b.y);
   const pulse = Math.sin(frame*0.1)*2;
+  const jaw = Math.sin(frame*0.35)*2;
   ctx.save();
-  ctx.fillStyle='#180000'; ctx.fillRect(x-24,y-40+pulse,48,50);
-  ctx.fillStyle='#4b0000'; ctx.fillRect(x-20,y-44+pulse,40,14);
-  ctx.fillStyle='#8c0000'; ctx.fillRect(x-18,y-38+pulse,36,30);
+  ctx.fillStyle='#180000'; ctx.fillRect(x-26,y-42+pulse,52,54);
+  ctx.fillStyle='#4b0000'; ctx.fillRect(x-21,y-46+pulse,42,15);
+  ctx.fillStyle='#8c0000'; ctx.fillRect(x-19,y-40+pulse,38,33);
   ctx.fillStyle='#cf3535'; ctx.fillRect(x-12,y-35+pulse,24,4);
   ctx.fillStyle='#ff4400'; ctx.fillRect(x-12,y-34+pulse,8,8); ctx.fillRect(x+4,y-34+pulse,8,8);
-  ctx.fillStyle='#330000'; ctx.fillRect(x-10,y-20+pulse,20,5);
-  ctx.fillRect(x-12,y-18+pulse,4,4); ctx.fillRect(x+8,y-18+pulse,4,4);
+  ctx.fillStyle='#fff0c0'; ctx.fillRect(x-9,y-32+pulse,2,2); ctx.fillRect(x+7,y-32+pulse,2,2);
+  ctx.fillStyle='#330000'; ctx.fillRect(x-12,y-20+pulse+jaw,24,6);
+  ctx.fillRect(x-13,y-18+pulse+jaw,5,5); ctx.fillRect(x+8,y-18+pulse+jaw,5,5);
+  ctx.fillStyle='rgba(255,100,100,0.18)'; ctx.fillRect(x-22,y-30+pulse,44,7);
   ctx.fillStyle='#ff6666';
   ctx.font='bold 9px monospace'; ctx.textAlign='center';
   ctx.fillText('SHAME BOSS', x, y-50+pulse);
@@ -282,8 +318,10 @@ function drawGem(g) {
 function drawBullet(b) {
   const x = Math.round(b.x - state.camX), y = Math.round(b.y);
   ctx.save();
-  ctx.fillStyle='#ffee66'; ctx.fillRect(x-3,y-1,6,2);
-  ctx.fillStyle='#fff'; ctx.fillRect(x+2*b.dir,y-1,2,2);
+  ctx.fillStyle='rgba(255,180,0,0.35)';
+  ctx.fillRect(x-8*b.dir,y-2,7,4);
+  ctx.fillStyle='#ffee66'; ctx.fillRect(x-3,y-1,7,3);
+  ctx.fillStyle='#fff'; ctx.fillRect(x+3*b.dir,y-1,2,2);
   ctx.restore();
 }
 
@@ -358,6 +396,19 @@ function spawnParticles(x, y, colors, n=8) {
       vy: -Math.random()*4-1,
       life: 40,
       color: colors[Math.floor(Math.random()*colors.length)]
+    });
+  }
+}
+
+function spawnSparkBurst(x, y, dir = 1, n = 6) {
+  for (let i = 0; i < n; i++) {
+    state.particles.push({
+      x: x - state.camX,
+      y,
+      vx: dir * (2 + Math.random() * 3) + (Math.random()-0.5),
+      vy: (Math.random()-0.5) * 1.5,
+      life: 14 + Math.floor(Math.random() * 8),
+      color: ['#fffbc7', '#ffc65e', '#ff8f2e'][Math.floor(Math.random() * 3)]
     });
   }
 }
@@ -516,12 +567,14 @@ function fireShot() {
   p.gunFlash = 3;
   spawnParticles(p.x+p.facing*16, p.y+10, ['#fff799','#ff8c00','#ffd700'], 5);
   spawnParticles(p.x+p.facing*8, p.y+8, ['#c2a35f','#f0d28a'], 2);
+  spawnSparkBurst(p.x + p.facing*16, p.y + 10, p.facing, 7);
 }
 
 function updateShooting() {
   if ((keys['KeyJ']||keys['KeyK']||keys['KeyX']) && state.fireCooldown===0){
     fireShot();
-    state.fireCooldown = 11;
+    const moving = Math.abs(state.player.vx) > 1.7;
+    state.fireCooldown = moving ? 7 : 9;
   }
 }
 
@@ -577,6 +630,7 @@ function updateBullets() {
       if (Math.abs(b.x-e.x)<16 && Math.abs(b.y-(e.y-8))<16){
         e.hp--;
         spawnParticles(e.x, e.y-8, ['#ff66ff','#9966ff','#fff'], 8);
+        spawnSparkBurst(e.x, e.y - 8, b.dir, 4);
         if (e.hp<=0){
           e.alive=false;
           spawnParticles(e.x, e.y, PRIDE_COLS, 14);
@@ -590,6 +644,7 @@ function updateBullets() {
       if (Math.abs(b.x-boss.x)<28 && Math.abs(b.y-(boss.y-12))<30){
         boss.hp--;
         spawnParticles(boss.x, boss.y-10, ['#ff6666','#ff2222','#fff'], 8);
+        spawnSparkBurst(boss.x - 12, boss.y - 12, b.dir, 6);
         if (boss.hp<=0){
           boss.alive=false;
           spawnParticles(boss.x, boss.y, PRIDE_COLS, 30);
@@ -613,15 +668,19 @@ function updateEnemyShots() {
       const dy = (p.y + 8) - (e.y - 8);
       const len = Math.max(1, Math.hypot(dx, dy));
       state.enemyShots.push({ x:e.x, y:e.y-8, vx:(dx/len)*3.2, vy:(dy/len)*3.2, life:140 });
-      e.fireTimer = 72 + Math.floor(Math.random()*60);
+      e.fireTimer = 56 + Math.floor(Math.random()*45);
     }
   });
 
-  if (state.boss && state.boss.alive && state.boss.atkTimer % 35 === 0) {
+  if (state.boss && state.boss.alive && state.boss.atkTimer % 24 === 0) {
     const dx = p.x - state.boss.x;
     const dy = (p.y + 8) - (state.boss.y - 10);
     const len = Math.max(1, Math.hypot(dx, dy));
     state.enemyShots.push({ x:state.boss.x, y:state.boss.y-8, vx:(dx/len)*4.2, vy:(dy/len)*4.2, life:130 });
+    if (state.boss.atkTimer % 48 === 0) {
+      state.enemyShots.push({ x:state.boss.x, y:state.boss.y-8, vx:(dx/len)*3.4 - 1.2, vy:(dy/len)*3.4, life:130 });
+      state.enemyShots.push({ x:state.boss.x, y:state.boss.y-8, vx:(dx/len)*3.4 + 1.2, vy:(dy/len)*3.4, life:130 });
+    }
   }
 
   state.enemyShots = state.enemyShots.filter(s => {
