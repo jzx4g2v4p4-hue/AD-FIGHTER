@@ -279,6 +279,7 @@ let frame = 0;
 let gamePhase = 'start'; // 'start' | 'cutscene' | 'playing' | 'won'
 let cutscenePlayer = null;
 let campaignScore = 0;
+let transitionTimer = null;
 const touchPointerMap = new Map();
 
 // ---- INIT ----
@@ -477,6 +478,10 @@ function beginGame() {
   if (ss) ss.remove();
   currentLevel = 0;
   campaignScore = 0;
+  if (transitionTimer) {
+    clearTimeout(transitionTimer);
+    transitionTimer = null;
+  }
   // Play intro cutscene first
   gamePhase = 'cutscene';
   cutscenePlayer = new CutscenePlayer(() => {
@@ -1487,10 +1492,16 @@ function checkLevelComplete() {
                 "Sector clear. Keep running toward your truth.";
     state.msgText=msg; state.msgTimer=180;
 
-    setTimeout(()=>{
+    if (transitionTimer) clearTimeout(transitionTimer);
+    transitionTimer = setTimeout(()=>{
+      transitionTimer = null;
       if (currentLevel >= LEVELS.length - 1) {
-        gamePhase='won';
-        buildWinScreen();
+        gamePhase='cutscene';
+        cutscenePlayer = new CutscenePlayer(()=>{
+          gamePhase='won';
+          buildWinScreen();
+        });
+        cutscenePlayer.play('victory');
         return;
       }
       gamePhase='cutscene';
@@ -1500,7 +1511,7 @@ function checkLevelComplete() {
         gamePhase='playing';
         loop();
       });
-      cutscenePlayer.play(L.afterCutscene);
+      cutscenePlayer.play(L.afterCutscene || 'after_level1');
     }, 2500);
   }
   if (onFinalLevel && bossDown && !reachedFinishGate && state.msgTimer < 30) {
