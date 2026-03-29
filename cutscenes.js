@@ -47,6 +47,7 @@ function drawCinematicFX(ctx, W, H, f) {
 
 function drawGreg8bit(ctx, x, y, scale=1, facing=1) {
   const wobble = Math.sin((x + y) * 0.01 + performance.now() * 0.004) * 1.2;
+  const shine = Math.max(0, Math.sin(performance.now() * 0.003));
   ctx.save();
   ctx.translate(x, y + wobble);
   ctx.scale(scale * facing, scale);
@@ -58,6 +59,7 @@ function drawGreg8bit(ctx, x, y, scale=1, facing=1) {
   ctx.fillStyle='#3a1a00'; ctx.fillRect(-7,24,7,8); ctx.fillRect(2,24,7,8);
   // pants
   ctx.fillStyle='#1a1a5c'; ctx.fillRect(-7,14,14,12);
+  ctx.fillStyle='rgba(255,255,255,0.14)'; ctx.fillRect(-5,15,4,9);
   // belt
   ctx.fillStyle='#8b4513'; ctx.fillRect(-7,12,14,4);
   ctx.fillStyle='#ffd700'; ctx.fillRect(-2,12,4,4);
@@ -74,12 +76,14 @@ function drawGreg8bit(ctx, x, y, scale=1, facing=1) {
   ctx.fillStyle='#000'; ctx.fillRect(0,-7,3,3); ctx.fillRect(-4,-7,3,3);
   // smile
   ctx.fillStyle='#ff9999'; ctx.fillRect(-3,-1,7,2);
+  ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.fillRect(-1,-2,3,1);
   // mohawk rainbow
   for(let i=0;i<6;i++){ctx.fillStyle=r[i]; ctx.fillRect(-2,-12-i*3,5,4);}
   // ponytail
   ctx.fillStyle='#5c3a1e'; ctx.fillRect(4,-10,3,14); ctx.fillRect(5,-5,4,3);
   // sidearm silhouette
   ctx.fillStyle='#111'; ctx.fillRect(11,7,8,4); ctx.fillRect(12,11,3,4);
+  ctx.fillStyle=`rgba(255,255,255,${0.2 + shine * 0.2})`; ctx.fillRect(12,8,4,1);
   ctx.restore();
 }
 
@@ -435,9 +439,11 @@ function drawBossIntro(ctx, W, H, f) {
   ctx.fillStyle='#110000'; ctx.fillRect(W/2-25,100+pulse,50,10);
   ctx.fillRect(W/2-30,95+pulse,10,10); ctx.fillRect(W/2+20,95+pulse,10,10);
   // label
-  ctx.fillStyle='#ff4444';
+  ctx.fillStyle='#ff7aa8';
   ctx.font='bold 14px monospace'; ctx.textAlign='center';
-  ctx.fillText('SHAME', W/2, 30+pulse);
+  ctx.fillText('TR', W/2, 30+pulse);
+  ctx.font='bold 10px monospace';
+  ctx.fillText('FIRED GREG FOR BEING GAY', W/2, 44 + pulse);
   // Greg small but brave at bottom
   drawGreg8bit(ctx, W/2, H-60, 1.1, 1);
   // dramatic light between them
@@ -716,7 +722,8 @@ const CUTSCENES = {
       scene: 'boss_intro',
       title: 'Final Approach',
       lines: [
-        "The sky burns red as SHAME gathers for one last stand.",
+        "The sky burns red as TR steps out for one last stand.",
+        "TR once fired Greg for being gay and tried to call that power.",
         "Greg hears every ally in his mind: Eric narrating, Charly, Mark, Jairo, Chris, Jules, Marco — and his own voice strongest of all.",
         "He chambers a round, steps forward, and chooses himself."
       ]
@@ -729,7 +736,7 @@ const CUTSCENES = {
       scene: 'victory',
       title: 'Greg Mills — Proudly Himself',
       lines: [
-        "The Shame Boss shatters into a thousand pieces of light.",
+        "TR's hate campaign shatters into a thousand pieces of light.",
         "Greg kisses Jairo in the middle of the street while Chris cheers and pulls them into a laughing hug.",
         "Charly gives Greg a soft smile and lets him go, proud that he finally chose his truth.",
         "The three men walk into a heart-shaped sunset together — loud, gay, and deeply in love."

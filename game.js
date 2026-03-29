@@ -250,7 +250,7 @@ const LEVELS = [
     afterCutscene: 'after_level4'
   },
   {
-    name:      "Face Yourself",
+    name:      "HR Tower Showdown",
     bg:        ['#1a0000','#4d0000'],
     groundY:   300,
     worldW:    980,
@@ -258,7 +258,7 @@ const LEVELS = [
     gems:      [[145,220],[315,178],[495,220],[665,185]],
     enemies:   [],
     bossX:     700,
-    msg:       "Defeat the Shame Boss — shoot your doubts away!",
+    msg:       "Final boss TR fired Greg for being gay. Tonight Greg fights back with pride.",
     afterCutscene: 'victory'
   }
 ];
@@ -459,7 +459,7 @@ function buildWinScreen() {
     <div class="rainbow-bar">${PRIDE_COLS.map(c=>`<div style="background:${c}"></div>`).join('')}</div>
     <div class="win-text">
       Greg collected all the rainbow gems, defeated every Doubt Demon,<br>
-      and crushed the Shame Boss into glitter confetti.<br><br>
+      and sent TR's hate campaign into glitter confetti.<br><br>
       He now runs into the sunset hand-in-hand with Jairo and Chris —<br>
       loud, queer, and completely in love.<br><br>
       <strong style="color:#ff69b4;">Greg Mills is loved exactly as he is.</strong>
@@ -522,16 +522,16 @@ function drawGregFallback(x, y, facing, invincible, gunRecoil = 0, gunFlash = 0)
   // arms
   ctx.fillStyle='#a76935'; ctx.fillRect(-13,2+stride*0.2+shoulderLift*0.2,5,10); ctx.fillRect(8,2-stride*0.25-shoulderLift*0.35,5,10);
   ctx.fillStyle='#d59b58'; ctx.fillRect(-12,2+stride*0.2,3,4); ctx.fillRect(9,2-stride*0.2,3,4);
-  // animated Glock-style sidearm + slide recoil
+  // weapon silhouette + slide recoil
   const recoil = Math.min(4, gunRecoil);
-  const slimeGun = state.player.weaponMode === 'slime';
-  if (slimeGun) {
-    ctx.fillStyle='#060606'; ctx.fillRect(10-recoil,7-shoulderLift*0.35,18,6);
-    ctx.fillStyle='#111'; ctx.fillRect(11,12,10,5);
-    ctx.fillStyle='#0f0f0f'; ctx.fillRect(13,15,4,5);
-    ctx.fillStyle='#1f1f1f'; ctx.fillRect(27-recoil,9-shoulderLift*0.35,8,3);
-    ctx.fillStyle='rgba(255,255,255,0.28)'; ctx.fillRect(12,8,11,1);
-    ctx.fillStyle='rgba(255,255,255,0.65)'; ctx.fillRect(31-recoil,9,3,2);
+  const toyLauncher = state.player.weaponMode === 'slime';
+  if (toyLauncher) {
+    ctx.fillStyle='#ec6cae'; ctx.fillRect(8-recoil,6-shoulderLift*0.35,20,7);
+    ctx.fillStyle='#cf4f93'; ctx.fillRect(10,12,12,5);
+    ctx.fillStyle='#a73475'; ctx.fillRect(13,15,5,5);
+    ctx.fillStyle='#f4a8cd'; ctx.fillRect(27-recoil,8-shoulderLift*0.35,8,4);
+    ctx.fillStyle='rgba(255,255,255,0.35)'; ctx.fillRect(11,7,10,1);
+    ctx.fillStyle='rgba(255,255,255,0.8)'; ctx.fillRect(30-recoil,9,3,2);
   } else {
     ctx.fillStyle='#101010'; ctx.fillRect(10-recoil,7-shoulderLift*0.35,11,5);      // slide
     ctx.fillStyle='#2b2b2b'; ctx.fillRect(10,12,7,4);             // frame
@@ -541,7 +541,7 @@ function drawGregFallback(x, y, facing, invincible, gunRecoil = 0, gunFlash = 0)
   }
   if (gunFlash > 0) {
     const flashGrow = 6 - gunFlash;
-    if (slimeGun) {
+    if (toyLauncher) {
       ctx.fillStyle='rgba(245,255,255,0.96)'; ctx.fillRect(31,6,6+flashGrow,6);
       ctx.fillStyle='rgba(220,240,255,0.92)'; ctx.fillRect(35+flashGrow,7,5,4);
       ctx.fillStyle='rgba(190,220,245,0.75)'; ctx.fillRect(39+flashGrow,8,4,2);
@@ -596,18 +596,20 @@ function drawBossFallback(b, alpha = 1) {
   const jaw = Math.sin(frame*0.35)*2;
   ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.fillStyle='#180000'; ctx.fillRect(x-26,y-42+pulse,52,54);
-  ctx.fillStyle='#4b0000'; ctx.fillRect(x-21,y-46+pulse,42,15);
-  ctx.fillStyle='#8c0000'; ctx.fillRect(x-19,y-40+pulse,38,33);
-  ctx.fillStyle='#cf3535'; ctx.fillRect(x-12,y-35+pulse,24,4);
-  ctx.fillStyle='#ff4400'; ctx.fillRect(x-12,y-34+pulse,8,8); ctx.fillRect(x+4,y-34+pulse,8,8);
+  ctx.fillStyle='#120f16'; ctx.fillRect(x-28,y-44+pulse,56,56);
+  ctx.fillStyle='#26213a'; ctx.fillRect(x-23,y-48+pulse,46,16);
+  ctx.fillStyle='#6f2f3f'; ctx.fillRect(x-21,y-40+pulse,42,34);
+  ctx.fillStyle='#ff8ab6'; ctx.fillRect(x-13,y-36+pulse,26,4);
+  ctx.fillStyle='#ff4477'; ctx.fillRect(x-12,y-34+pulse,8,8); ctx.fillRect(x+4,y-34+pulse,8,8);
   ctx.fillStyle='#fff0c0'; ctx.fillRect(x-9,y-32+pulse,2,2); ctx.fillRect(x+7,y-32+pulse,2,2);
-  ctx.fillStyle='#330000'; ctx.fillRect(x-12,y-20+pulse+jaw,24,6);
+  ctx.fillStyle='#2b1120'; ctx.fillRect(x-12,y-20+pulse+jaw,24,6);
   ctx.fillRect(x-13,y-18+pulse+jaw,5,5); ctx.fillRect(x+8,y-18+pulse+jaw,5,5);
-  ctx.fillStyle='rgba(255,100,100,0.18)'; ctx.fillRect(x-22,y-30+pulse,44,7);
-  ctx.fillStyle='#ff6666';
+  ctx.fillStyle='rgba(255,130,180,0.2)'; ctx.fillRect(x-22,y-30+pulse,44,7);
+  ctx.fillStyle='#ffd2e5';
   ctx.font='bold 9px monospace'; ctx.textAlign='center';
-  ctx.fillText('SHAME BOSS', x, y-50+pulse);
+  ctx.fillText('TR', x, y-58+pulse);
+  ctx.font='bold 7px monospace';
+  ctx.fillText('HATE BOSS', x, y-50+pulse);
   // HP bar
   const bw=60, bfill=Math.round((b.hp/b.maxHp)*bw);
   ctx.fillStyle='#440000'; ctx.fillRect(x-30,y-60,bw,8);
@@ -745,11 +747,14 @@ function drawBullet(b) {
   ctx.lineTo(x, y);
   ctx.stroke();
   if (slime) {
-    ctx.fillStyle='rgba(255,255,255,0.92)';
-    ctx.fillRect(x-10*b.dir,y-3,9,6);
-    ctx.fillStyle='#d5e6f4';
-    ctx.fillRect(x-2,y-2,8,4);
-    ctx.fillStyle='#fff'; ctx.fillRect(x+4*b.dir,y-1,3,2);
+    // stylized novelty projectile for Greg's requested pride toy launcher
+    ctx.fillStyle='rgba(255,170,214,0.82)';
+    ctx.fillRect(x-11*b.dir,y-3,9,6);
+    ctx.fillStyle='#ff87c9';
+    ctx.fillRect(x-2,y-2,9,4);
+    ctx.fillStyle='#ffd3ea';
+    ctx.fillRect(x+6*b.dir,y-4,4,8);
+    ctx.fillStyle='#fff'; ctx.fillRect(x+4*b.dir,y-1,2,2);
   } else if (rapid) {
     ctx.fillStyle='rgba(180,255,140,0.52)';
     ctx.fillRect(x-10*b.dir,y-2,8,4);
@@ -1190,10 +1195,10 @@ function updatePlayer() {
       p.weaponMode = pu.type === 'mark' ? 'rapid' : 'slime';
       p.weaponTimer = pu.type === 'mark' ? 680 : 820;
       state.msgText = pu.type === 'jairo'
-        ? "Greg fulfilled his Courage needs and was granted Jairo's Slime Cannon."
+        ? "Greg grabbed Jairo's Pride Toy Launcher. Fabulous payload unlocked."
         : pu.type === 'mark'
           ? "Greg fulfilled his Clarity needs and was granted Mark's Burst Upgrade."
-          : "Greg fulfilled his Joy needs and was granted Chris's Slime Cannon.";
+          : "Greg grabbed Chris's Pride Toy Launcher and turned joy into ammo.";
       state.msgTimer = 140;
       spawnParticles(pu.x, pu.y, ['#ffffff','#d9e8ff','#ff9fd2'], 16);
       addScreenShake(1.8, 5);
@@ -1216,18 +1221,18 @@ function updatePlayer() {
 
 function fireShot() {
   const p = state.player;
-  const slime = p.weaponMode === 'slime' && p.weaponTimer > 0;
+  const toy = p.weaponMode === 'slime' && p.weaponTimer > 0;
   const rapid = p.weaponMode === 'rapid' && p.weaponTimer > 0;
-  const shotSpeed = slime ? 6 : (rapid ? 8.4 : 7);
+  const shotSpeed = toy ? 6 : (rapid ? 8.4 : 7);
   const volley = rapid ? [-4, 0, 4] : [0];
   volley.forEach(offsetY => {
     state.bullets.push({
-      x: p.x + p.facing*(slime ? 20 : 15),
+      x: p.x + p.facing*(toy ? 20 : 15),
       y: p.y + 10 + offsetY,
       vx: p.facing*shotSpeed,
       dir: p.facing,
-      life: slime ? 84 : (rapid ? 58 : 70),
-      type: slime ? 'slime' : (rapid ? 'rapid' : 'bullet')
+      life: toy ? 84 : (rapid ? 58 : 70),
+      type: toy ? 'slime' : (rapid ? 'rapid' : 'bullet')
     });
   });
   p.gunRecoil = 6;
@@ -1240,15 +1245,15 @@ function fireShot() {
     h: 4,
     life: 5,
     maxLife: 5,
-    color: slime ? 'rgba(255,255,255,0.72)' : (rapid ? 'rgba(185,255,140,0.78)' : 'rgba(255,240,150,0.7)')
+    color: toy ? 'rgba(255,196,225,0.78)' : (rapid ? 'rgba(185,255,140,0.78)' : 'rgba(255,240,150,0.7)')
   });
   spawnParticles(
     p.x + p.facing * 16,
     p.y + 10,
-    slime ? ['#ffffff','#e5f0ff','#d0e4f8'] : (rapid ? ['#f1ffd7','#b8ff80','#83c655'] : ['#fff799','#ff8c00','#ffd700']),
+    toy ? ['#fff0f8','#ffc7e6','#ff93c7'] : (rapid ? ['#f1ffd7','#b8ff80','#83c655'] : ['#fff799','#ff8c00','#ffd700']),
     rapid ? 8 : 5
   );
-  spawnParticles(p.x+p.facing*8, p.y+8, slime ? ['#f4f7ff','#ccd6e8'] : ['#c2a35f','#f0d28a'], 2);
+  spawnParticles(p.x+p.facing*8, p.y+8, toy ? ['#ffe7f5','#f5bfdc'] : ['#c2a35f','#f0d28a'], 2);
   spawnSparkBurst(p.x + p.facing*16, p.y + 10, p.facing, 7);
   spawnShellCasings(p.x + p.facing * 8, p.y + 8, p.facing, 2);
   addScreenShake(1.4, 4);
@@ -1486,7 +1491,7 @@ function checkLevelComplete() {
   if ((allGems && allEnemies && bossDown) || reachedFinishGate){
     state.complete = true;
     const L = LEVELS[state.level];
-    const msg = currentLevel===LEVELS.length-1 ? "SHAME DEFEATED! Extracting Greg to the victory screen!" :
+    const msg = currentLevel===LEVELS.length-1 ? "TR DEFEATED! Greg takes back his story and heads to extraction!" :
                 currentLevel===0 ? "First wall broken. Keep moving forward!" :
                 currentLevel===LEVELS.length-2 ? "One final push. Face yourself." :
                 "Sector clear. Keep running toward your truth.";
