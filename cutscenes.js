@@ -9,6 +9,11 @@ function paintScene(canvas, sceneId, frame) {
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
+  // Subtle camera drift for more cinematic cutscene motion.
+  const driftX = Math.sin(frame * 0.025) * 1.8;
+  const driftY = Math.cos(frame * 0.02) * 1.2;
+  ctx.save();
+  ctx.translate(driftX, driftY);
 
   switch (sceneId) {
     case 'intro_bedroom':   drawBedroom(ctx, W, H, frame);   break;
@@ -27,6 +32,7 @@ function paintScene(canvas, sceneId, frame) {
     case 'victory_snowball':drawVictorySnowball(ctx, W, H, frame); break;
     default:                drawDefault(ctx, W, H, frame);   break;
   }
+  ctx.restore();
   drawCinematicFX(ctx, W, H, frame);
 }
 
@@ -42,6 +48,12 @@ function drawCinematicFX(ctx, W, H, f) {
   ctx.globalAlpha = 1;
   ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, W, H);
+  // Stronger transition pulse for arcade-style scene energy.
+  const flash = Math.max(0, 1 - (f / 24));
+  if (flash > 0) {
+    ctx.fillStyle = `rgba(255,255,255,${flash * 0.35})`;
+    ctx.fillRect(0, 0, W, H);
+  }
   ctx.restore();
 }
 
@@ -425,6 +437,12 @@ function drawBossIntro(ctx, W, H, f) {
     ctx.fillStyle=`rgba(${100+i*10},0,0,0.4)`;
     ctx.fillRect(0,i*(H/8),W,H/8);
   }
+  // storm parallax layers for heavier intro energy
+  for (let i = 0; i < 5; i++) {
+    const cloudX = ((i * 90) - f * (0.7 + i * 0.1)) % (W + 120) - 60;
+    ctx.fillStyle = 'rgba(20,0,0,0.28)';
+    ctx.fillRect(cloudX, 20 + i * 22, 110, 16);
+  }
   // boss form — large looming
   const pulse = Math.sin(f*0.08)*4;
   ctx.fillStyle='#220000'; ctx.fillRect(W/2-70,40+pulse,140,200);
@@ -449,6 +467,10 @@ function drawBossIntro(ctx, W, H, f) {
   // dramatic light between them
   ctx.fillStyle='rgba(255,50,50,0.05)';
   ctx.beginPath(); ctx.moveTo(W/2,250); ctx.lineTo(W/2-60,H-60); ctx.lineTo(W/2+60,H-60); ctx.closePath(); ctx.fill();
+  // warning frame pulse
+  ctx.strokeStyle = `rgba(255,90,120,${0.45 + Math.abs(Math.sin(f * 0.12)) * 0.4})`;
+  ctx.lineWidth = 4;
+  ctx.strokeRect(2, 2, W - 4, H - 4);
 }
 
 function drawVictory(ctx, W, H, f) {
@@ -488,6 +510,13 @@ function drawVictory(ctx, W, H, f) {
     ctx.fillStyle=PRIDE[i%6];
     ctx.fillRect(sx,sy,3,3);
   }
+  // celebratory rainbow speed lines
+  ctx.globalAlpha = 0.26;
+  for (let i = 0; i < 6; i++) {
+    ctx.fillStyle = PRIDE[(i + Math.floor(f / 6)) % 6];
+    ctx.fillRect(0, 24 + i * 6, W, 2);
+  }
+  ctx.globalAlpha = 1;
 
   // Charlie left side, waving farewell
   drawHeroVariant(ctx, 64, H-74, f+10, {
