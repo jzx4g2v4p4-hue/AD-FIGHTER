@@ -259,7 +259,7 @@ const LEVELS = [
     enemies:   [{x:180,y:288,dir:1},{x:360,y:288,dir:-1},{x:520,y:288,dir:1},{x:730,y:288,dir:-1},{x:920,y:288,dir:1},{x:1080,y:288,dir:-1}],
     bossX:     null,
     msg:       "Heavy resistance. Keep rolling, firing, and serving pure pride.",
-    afterCutscene: 'after_level4'
+    afterCutscene: 'after_level5'
   },
   {
     name:      "Steel Sky Highway",
@@ -271,7 +271,7 @@ const LEVELS = [
     enemies:   [{x:220,y:288,dir:1},{x:410,y:288,dir:-1},{x:590,y:288,dir:1},{x:760,y:288,dir:-1},{x:930,y:288,dir:1},{x:1110,y:288,dir:-1}],
     bossX:     null,
     msg:       "Final gauntlet. This is full run-and-gun queer chaos.",
-    afterCutscene: 'after_level4'
+    afterCutscene: 'after_level6'
   },
   {
     name:      "HR Tower Showdown",

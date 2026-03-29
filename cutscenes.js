@@ -27,6 +27,10 @@ function paintScene(canvas, sceneId, frame) {
     case 'pov_jairo':       drawPovJairo(ctx, W, H, frame);  break;
     case 'pov_chris':       drawPovChris(ctx, W, H, frame);  break;
     case 'pov_marco':       drawPovMarco(ctx, W, H, frame);  break;
+    case 'night_tender':    drawNightTender(ctx, W, H, frame); break;
+    case 'raid_abduction':  drawRaidAbduction(ctx, W, H, frame); break;
+    case 'dungeon_cell':    drawDungeonCell(ctx, W, H, frame); break;
+    case 'rescue_vow':      drawRescueVow(ctx, W, H, frame); break;
     case 'boss_intro':      drawBossIntro(ctx, W, H, frame); break;
     case 'victory':         drawVictory(ctx, W, H, frame);   break;
     case 'victory_snowball':drawVictorySnowball(ctx, W, H, frame); break;
@@ -430,6 +434,118 @@ function drawPovMarco(ctx, W, H, f) {
   ctx.fillText('"We got your six, Greg. Keep moving."', W/2, 63);
 }
 
+function drawNightTender(ctx, W, H, f) {
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#120b25');
+  grad.addColorStop(1, '#2b1140');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  for (let i = 0; i < 24; i++) {
+    const sx = (i * 47 + f * 0.2) % W;
+    const sy = (i * 29) % 110;
+    ctx.fillRect(sx, sy, 2, 2);
+  }
+  ctx.fillStyle = '#2d1b10';
+  ctx.fillRect(32, H - 108, W - 64, 86);
+  ctx.fillStyle = '#5a3450';
+  ctx.fillRect(58, H - 120, W - 116, 62);
+  ctx.fillStyle = '#ff9dcf';
+  ctx.fillRect(62, H - 118, W - 124, 10);
+  drawHeroVariant(ctx, W / 2 - 20, H - 78, f + 4, {
+    facing: 1, scale: 1.28, shirt: '#ff5ea8', pants: '#5969a2', skin: '#c68642', beard: '#5c3a1e', hair: '#232323'
+  });
+  drawHeroVariant(ctx, W / 2 + 8, H - 78, f + 8, {
+    facing: -1, scale: 1.25, shirt: '#ffcf6a', pants: '#80864a', skin: '#bf7d42', beard: '#2d1b08', hair: '#2d1b08'
+  });
+  drawHeroVariant(ctx, W / 2 + 38, H - 78, f + 12, {
+    facing: -1, scale: 1.22, shirt: '#89f2c4', pants: '#6b8b58', skin: '#b87740', beard: '#2b1b10', hair: '#1b1b1b'
+  });
+  ctx.fillStyle = 'rgba(255,160,210,0.35)';
+  ctx.fillRect(0, H - 145, W, 5);
+}
+
+function drawRaidAbduction(ctx, W, H, f) {
+  ctx.fillStyle = '#1a000c';
+  ctx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 6; i++) {
+    ctx.fillStyle = `rgba(255,30,70,${0.08 + i * 0.03})`;
+    ctx.fillRect(0, i * 28, W, 20);
+  }
+  const siren = Math.abs(Math.sin(f * 0.2));
+  ctx.fillStyle = `rgba(255,80,120,${0.2 + siren * 0.3})`;
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#2b0c15';
+  ctx.fillRect(24, H - 108, W - 48, 86);
+  drawHeroVariant(ctx, 120, H - 74, f, {
+    facing: 1, scale: 1.2, shirt: '#ff5ea8', pants: '#5969a2', skin: '#c68642', beard: '#5c3a1e', hair: '#232323'
+  });
+  drawHeroVariant(ctx, 208 + Math.sin(f * 0.22) * 3, H - 74, f + 9, {
+    facing: -1, scale: 1.2, shirt: '#ffcf6a', pants: '#80864a', skin: '#bf7d42', beard: '#2d1b08', hair: '#2d1b08'
+  });
+  drawHeroVariant(ctx, 258 + Math.cos(f * 0.22) * 3, H - 74, f + 15, {
+    facing: -1, scale: 1.2, shirt: '#89f2c4', pants: '#6b8b58', skin: '#b87740', beard: '#2b1b10', hair: '#1b1b1b'
+  });
+  ctx.fillStyle = '#7a1c2f';
+  ctx.fillRect(W - 132, H - 132, 90, 116);
+  ctx.fillStyle = '#ff8db5';
+  ctx.font = 'bold 10px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('TR STRIKE UNIT', W - 88, H - 116);
+  ctx.fillStyle = '#ffd2e6';
+  ctx.fillRect(176 + Math.sin(f * 0.35) * 8, H - 100, 52, 3);
+  ctx.fillRect(228 + Math.cos(f * 0.35) * 8, H - 92, 46, 3);
+}
+
+function drawDungeonCell(ctx, W, H, f) {
+  ctx.fillStyle = '#08101f';
+  ctx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 11; i++) {
+    ctx.fillStyle = i % 2 ? '#101a2e' : '#0c1425';
+    ctx.fillRect(i * 30, 0, 24, H);
+  }
+  ctx.fillStyle = '#263349';
+  for (let i = 0; i < 9; i++) ctx.fillRect(56 + i * 24, 22, 4, H - 44);
+  ctx.fillStyle = '#334762';
+  ctx.fillRect(48, 24, W - 96, 6);
+  ctx.fillRect(48, H - 30, W - 96, 6);
+  drawHeroVariant(ctx, W / 2 - 34, H - 74, f + 6, {
+    facing: 1, scale: 1.18, shirt: '#ffcf6a', pants: '#80864a', skin: '#bf7d42', beard: '#2d1b08', hair: '#2d1b08'
+  });
+  drawHeroVariant(ctx, W / 2 + 26, H - 74, f + 11, {
+    facing: -1, scale: 1.18, shirt: '#89f2c4', pants: '#6b8b58', skin: '#b87740', beard: '#2b1b10', hair: '#1b1b1b'
+  });
+  const pulse = Math.abs(Math.sin(f * 0.12));
+  ctx.fillStyle = `rgba(120,210,255,${0.2 + pulse * 0.25})`;
+  ctx.fillRect(W / 2 - 90, 0, 180, H);
+}
+
+function drawRescueVow(ctx, W, H, f) {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#200014');
+  g.addColorStop(1, '#3a1128');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 5; i++) {
+    const beamX = ((i * 80) - f * 1.8) % (W + 90) - 45;
+    ctx.fillStyle = `rgba(255,120,170,${0.08 + i * 0.04})`;
+    ctx.fillRect(beamX, 0, 16, H);
+  }
+  drawGreg8bit(ctx, 104, H - 68, 1.45, 1);
+  ctx.fillStyle = '#ff9ec8';
+  ctx.fillRect(128, H - 96, 56, 4);
+  ctx.fillStyle = '#b8e9ff';
+  ctx.fillRect(188, H - 88, 52, 4);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 11px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('JAIRO + CHRIS', 182, H - 104);
+  ctx.fillStyle = '#ff76af';
+  ctx.fillRect(250, H - 132, 42, 42);
+  ctx.fillStyle = '#1b0a15';
+  ctx.fillRect(254, H - 128, 34, 34);
+}
+
 function drawBossIntro(ctx, W, H, f) {
   ctx.fillStyle='#1a0000'; ctx.fillRect(0,0,W,H);
   // red sky streaks
@@ -746,15 +862,56 @@ const CUTSCENES = {
         "\"No more hiding,\" Marco says. \"Let's clear this last street together.\"",
         "Charly, Mark, Jairo, and Chris stand behind him — chosen family and true love in one frame."
       ]
+    }
+  ],
+
+  after_level5: [
+    {
+      scene: 'night_tender',
+      title: 'A Quiet Night Together',
+      lines: [
+        "For one precious night, Greg, Jairo, and Chris finally rest in the same bed, tangled up in laughs and warm hands.",
+        "Jairo kisses Greg's forehead while Chris pulls the blanket over all three and jokes that this is the real victory loot.",
+        "Greg falls asleep between his lovers, feeling safe, chosen, and deeply loved."
+      ]
+    },
+    {
+      scene: 'raid_abduction',
+      title: 'TR Strikes In The Dark',
+      lines: [
+        "Sirens rip through the night as TR's strike crew crashes the room and drags Jairo and Chris away from Greg's arms.",
+        "\"You want them back?\" TR taunts over loudspeakers. \"Come to my dungeon and beg.\"",
+        "Greg wakes into chaos, grabs his weapon, and swears he will tear through every gate to save his lovers."
+      ]
+    },
+    {
+      scene: 'dungeon_cell',
+      title: 'Dungeon Broadcast',
+      lines: [
+        "A hacked city feed flashes a cold dungeon cell where Jairo and Chris are trapped behind steel bars.",
+        "Jairo grips Chris's hand and shouts: \"Greg, don't fold. We know you. You always come through.\"",
+        "Chris grins through bruises: \"Bring that fabulous chaos, babe. We'll hold the line till you arrive.\""
+      ]
+    }
+  ],
+
+  after_level6: [
+    {
+      scene: 'rescue_vow',
+      title: 'No One Gets Left Behind',
+      lines: [
+        "Greg reloads under neon rain and pins their names to his heart: Jairo. Chris.",
+        "He promises out loud: \"I'm coming for both of you. Nobody cages my lovers.\"",
+        "Eric (Narrator): The city trembles as Greg storms toward TR's final fortress."
+      ]
     },
     {
       scene: 'boss_intro',
       title: 'Final Approach',
       lines: [
-        "The sky burns red as TR steps out for one last stand.",
-        "TR once fired Greg for being gay and tried to call that power.",
-        "Greg hears every ally in his mind: Eric narrating, Charly, Mark, Jairo, Chris, Jules, Marco — and his own voice strongest of all.",
-        "He chambers a round, steps forward, and chooses himself."
+        "The sky burns red as TR steps out for one last stand above the dungeon controls.",
+        "TR once fired Greg for being gay and now cages the men Greg loves, pretending cruelty is power.",
+        "Greg hears every ally in his mind — and Jairo and Chris strongest of all — then chambers a round and steps forward."
       ]
     }
   ],
