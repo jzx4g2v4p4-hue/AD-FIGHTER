@@ -186,7 +186,7 @@ const LEVELS = [
     gems:      [[180,240],[350,210],[510,180]],
     enemies:   [{x:250,y:288,dir:1},{x:610,y:288,dir:-1}],
     bossX:     null,
-    msg:       "Collect all gems and blast the Doubt Demons!",
+    msg:       "Collect all gems and blast the Doubt Demons with fabulous force!",
     afterCutscene: 'after_level1'
   },
   {
@@ -198,7 +198,7 @@ const LEVELS = [
     gems:      [[120,230],[265,190],[430,150],[565,190],[725,160]],
     enemies:   [{x:160,y:288,dir:1},{x:340,y:288,dir:-1},{x:650,y:288,dir:1}],
     bossX:     null,
-    msg:       "Push forward. Keep firing. Doubts don't get the last word.",
+    msg:       "Push forward. Keep firing. Queer joy gets the last word.",
     afterCutscene: 'after_level2'
   },
   {
@@ -210,7 +210,7 @@ const LEVELS = [
     gems:      [[145,230],[290,200],[460,170],[645,210],[830,180]],
     enemies:   [{x:200,y:288,dir:1},{x:390,y:288,dir:-1},{x:560,y:288,dir:1},{x:840,y:288,dir:-1}],
     bossX:     null,
-    msg:       "Run-and-gun through the noise. You're getting stronger.",
+    msg:       "Run-and-gun through the noise. You're getting stronger and gayer.",
     afterCutscene: 'after_level3'
   },
   {
@@ -222,7 +222,7 @@ const LEVELS = [
     gems:      [[150,225],[320,185],[475,150],[655,195],[835,160],[960,200]],
     enemies:   [{x:210,y:288,dir:1},{x:370,y:288,dir:-1},{x:540,y:288,dir:1},{x:700,y:288,dir:-1},{x:910,y:288,dir:1}],
     bossX:     null,
-    msg:       "Friends are near. Clear the path and keep your courage loud.",
+    msg:       "Friends are near. Clear the path and keep your courage loud and glittery.",
     afterCutscene: 'after_level4'
   },
   {
@@ -234,7 +234,7 @@ const LEVELS = [
     gems:      [[140,225],[330,180],[490,145],[670,200],[850,165],[1010,205]],
     enemies:   [{x:180,y:288,dir:1},{x:360,y:288,dir:-1},{x:520,y:288,dir:1},{x:730,y:288,dir:-1},{x:920,y:288,dir:1},{x:1080,y:288,dir:-1}],
     bossX:     null,
-    msg:       "Heavy resistance. Keep rolling, firing, and breaking through.",
+    msg:       "Heavy resistance. Keep rolling, firing, and serving pure pride.",
     afterCutscene: 'after_level4'
   },
   {
@@ -246,7 +246,7 @@ const LEVELS = [
     gems:      [[170,228],[340,195],[520,160],[690,125],[850,190],[1010,158],[1155,205]],
     enemies:   [{x:220,y:288,dir:1},{x:410,y:288,dir:-1},{x:590,y:288,dir:1},{x:760,y:288,dir:-1},{x:930,y:288,dir:1},{x:1110,y:288,dir:-1}],
     bossX:     null,
-    msg:       "Final gauntlet. This is full run-and-gun chaos.",
+    msg:       "Final gauntlet. This is full run-and-gun queer chaos.",
     afterCutscene: 'after_level4'
   },
   {
@@ -268,7 +268,7 @@ const keys = {};
 const prevKeys = {};
 document.addEventListener('keydown', e => {
   keys[e.code] = true;
-  if (['Space','ArrowUp','ArrowLeft','ArrowRight','ArrowDown','KeyJ','KeyK','KeyX','KeyL'].includes(e.code)) e.preventDefault();
+  if (['Space','ArrowUp','ArrowLeft','ArrowRight','ArrowDown','ShiftLeft','ShiftRight','KeyJ','KeyK','KeyX','KeyL'].includes(e.code)) e.preventDefault();
 });
 document.addEventListener('keyup', e => { keys[e.code] = false; });
 
@@ -279,6 +279,7 @@ let frame = 0;
 let gamePhase = 'start'; // 'start' | 'cutscene' | 'playing' | 'won'
 let cutscenePlayer = null;
 let campaignScore = 0;
+let transitionTimer = null;
 const touchPointerMap = new Map();
 
 // ---- INIT ----
@@ -322,6 +323,7 @@ function initLevel(li) {
       x:60, y:260, vx:0, vy:0, onGround:false, facing:1, hp:4, maxHp:4, invincible:0,
       coyote: 0, gunRecoil: 0, gunFlash: 0, runFrame: 0,
       runDustTimer: 0, landingImpact: 0, tilt: 0,
+      dashTimer: 0, dashCooldown: 0,
       weaponMode: 'pistol', weaponTimer: 0,
       anim: createAnimState('idle'),
       hurtTimer: 0,
@@ -364,6 +366,7 @@ function initLevel(li) {
     camX:      0,
     worldW:    extendedWorldW,
     complete:  false,
+    finishZoneX: Math.max(extendedWorldW - 64, 760),
     levelIntroTimer: 90
   };
 }
@@ -439,7 +442,7 @@ function buildStartScreen() {
     <div class="pixel-sub">a journey to self-acceptance</div>
     <div class="rainbow-bar">${PRIDE_COLS.map(c=>`<div style="background:${c}"></div>`).join('')}</div>
     <button class="start-btn" id="startBtn">PRESS START</button>
-    <div class="controls">Keyboard: Arrow Keys / WASD Move, Space Jump, J / K / X Fire, L Bomb<br>iPhone, iPad, and Samsung/Android: on-screen buttons + full-screen layout</div>
+    <div class="controls">Keyboard: Arrow Keys / WASD Move, Space Jump, Shift / Down Roll, J / K / X Fire, L Bomb<br>iPhone, iPad, and Samsung/Android: on-screen buttons + full-screen layout</div>
   `;
   gc.appendChild(s);
   document.getElementById('startBtn').addEventListener('click', beginGame);
@@ -452,11 +455,13 @@ function buildWinScreen() {
   w.id = 'winScreen';
   w.innerHTML = `
     <div class="win-title">YOU DID IT, GREG!</div>
-    <div class="win-sub">Proud. Loud. 100% Himself.</div>
+    <div class="win-sub">Proud. Loud. Flamboyant. 100% Himself.</div>
     <div class="rainbow-bar">${PRIDE_COLS.map(c=>`<div style="background:${c}"></div>`).join('')}</div>
     <div class="win-text">
       Greg collected all the rainbow gems, defeated every Doubt Demon,<br>
-      and crushed the Shame Boss into glitter.<br><br>
+      and crushed the Shame Boss into glitter confetti.<br><br>
+      He now runs into the sunset hand-in-hand with Jairo and Chris —<br>
+      loud, queer, and completely in love.<br><br>
       <strong style="color:#ff69b4;">Greg Mills is loved exactly as he is.</strong>
     </div>
     <button class="start-btn" id="replayBtn">PLAY AGAIN</button>
@@ -473,6 +478,10 @@ function beginGame() {
   if (ss) ss.remove();
   currentLevel = 0;
   campaignScore = 0;
+  if (transitionTimer) {
+    clearTimeout(transitionTimer);
+    transitionTimer = null;
+  }
   // Play intro cutscene first
   gamePhase = 'cutscene';
   cutscenePlayer = new CutscenePlayer(() => {
@@ -795,6 +804,18 @@ function drawWorld() {
   const L = LEVELS[state.level];
   ctx.fillStyle=L.bg[0]; ctx.fillRect(0,0,W,H/2);
   ctx.fillStyle=L.bg[1]; ctx.fillRect(0,H/2,W,H/2);
+  // distant mountains
+  for (let i = 0; i < 7; i++) {
+    const mx = ((i * 180) - (state.camX * 0.12)) % (W + 280) - 140;
+    const peak = 84 + (i % 3) * 14;
+    ctx.fillStyle = 'rgba(18,22,42,0.36)';
+    ctx.beginPath();
+    ctx.moveTo(mx, H / 2 + 40);
+    ctx.lineTo(mx + 56, peak);
+    ctx.lineTo(mx + 120, H / 2 + 40);
+    ctx.closePath();
+    ctx.fill();
+  }
   for (let i = 0; i < 5; i++) {
     const cloudX = ((i * 190) - (state.camX * (0.08 + i * 0.01)) + frame * 0.18) % (W + 220) - 110;
     const cloudY = 36 + i * 15 + Math.sin((frame + i * 13) * 0.01) * 3;
@@ -810,6 +831,15 @@ function drawWorld() {
     ctx.fillRect(tx+7, 86, 20, 30);
     ctx.fillStyle='rgba(20,60,25,0.25)';
     ctx.fillRect(tx-12, 98, 62, 15);
+  }
+  // palm silhouettes / debris for metal-slug style battlefield
+  for (let i = 0; i < 6; i++) {
+    const px = ((i * 165) - (state.camX * 0.7)) % (W + 180) - 90;
+    ctx.fillStyle = 'rgba(15,32,16,0.42)';
+    ctx.fillRect(px, H - 176, 8, 98);
+    for (let frond = 0; frond < 4; frond++) {
+      ctx.fillRect(px - 12 + frond * 5, H - 178 + frond * 5, 28, 3);
+    }
   }
   for (let i=0;i<5;i++) {
     const rx = ((i*190) - (state.camX*0.4)%950);
@@ -848,6 +878,16 @@ function drawWorld() {
     ctx.fillStyle='#5a3300'; ctx.fillRect(sx,py,pw,6);
     for(let i=0;i<6;i++){ctx.fillStyle=PRIDE_COLS[i]; ctx.fillRect(sx,py+8+i,pw,1);}
   });
+  // extraction gate for final level so players can end the mission consistently
+  if (state.level === LEVELS.length - 1 && (!state.boss || !state.boss.alive)) {
+    const gateX = state.finishZoneX - state.camX;
+    ctx.fillStyle='rgba(255,255,255,0.08)'; ctx.fillRect(gateX - 24, L.groundY - 62, 48, 62);
+    ctx.fillStyle='#ff6bd6'; ctx.fillRect(gateX - 16, L.groundY - 54, 32, 10);
+    ctx.fillStyle='#83fffd'; ctx.fillRect(gateX - 16, L.groundY - 41, 32, 28);
+    ctx.fillStyle='#100819'; ctx.fillRect(gateX - 10, L.groundY - 37, 20, 20);
+    ctx.fillStyle='#fff'; ctx.font='9px monospace'; ctx.textAlign='center';
+    ctx.fillText('EXTRACT', gateX, L.groundY - 58);
+  }
 }
 
 // ---- PARTICLES ----
@@ -962,6 +1002,13 @@ function drawHUD() {
   ctx.fillText('★ '+collected+'/'+state.gems.length, 10, 42);
   ctx.fillStyle='#ff95c8'; ctx.fillText('⚑ '+flagCount+'/'+state.prideFlags.length, 76, 42);
   ctx.fillStyle='#ffb347'; ctx.fillText('BOMBS '+state.bombs, 160, 42);
+  if (state.player.dashCooldown === 0) {
+    ctx.fillStyle='#a8ffcf';
+    ctx.fillText('ROLL READY', 250, 42);
+  } else {
+    ctx.fillStyle='#6a8b7b';
+    ctx.fillText(`ROLL ${Math.ceil(state.player.dashCooldown / 10)}`, 250, 42);
+  }
   if (state.combo > 1 && state.comboTimer > 0) {
     ctx.fillStyle='#ff9f33';
     ctx.font='bold 12px monospace';
@@ -1015,6 +1062,8 @@ function updatePlayer() {
   const jumpHeld = keys['Space'] || keys['ArrowUp'] || keys['KeyW'];
   const jumpTap = justPressed('Space') || justPressed('ArrowUp') || justPressed('KeyW');
   const jumpRelease = justReleased('Space') || justReleased('ArrowUp') || justReleased('KeyW');
+  const dashTap = justPressed('ShiftLeft') || justPressed('ShiftRight') || justPressed('ArrowDown') || justPressed('KeyS');
+  const dashDir = movingLeft && !movingRight ? -1 : (movingRight && !movingLeft ? 1 : p.facing);
 
   if (movingLeft && !movingRight) {
     p.vx -= p.onGround ? accel : airAccel;
@@ -1038,7 +1087,35 @@ function updatePlayer() {
 
   if (jumpRelease && p.vy < -3 && !jumpHeld) p.vy *= 0.62;
 
+  if (dashTap && p.onGround && p.dashCooldown === 0 && p.dashTimer === 0) {
+    p.dashTimer = 12;
+    p.dashCooldown = 70;
+    p.facing = dashDir;
+    p.vx = dashDir * 8.4;
+    p.invincible = Math.max(p.invincible, 14);
+    state.msgText = "Combat roll! Metal-Slug style movement online.";
+    state.msgTimer = 28;
+    spawnParticles(p.x, p.y + 30, ['#fff','#ffd27a','#aa7f43'], 8);
+    addScreenShake(1.4, 4);
+  }
+
   p.vy += grav;
+  if (p.dashTimer > 0) {
+    p.dashTimer--;
+    p.vy = Math.min(p.vy, 0.6);
+    p.vx = p.facing * 8.1;
+    if (frame % 2 === 0) {
+      state.trails.push({
+        x: p.x - p.facing * 10,
+        y: p.y + 18,
+        w: 24,
+        h: 12,
+        life: 6,
+        maxLife: 6,
+        color: 'rgba(255,235,170,0.32)'
+      });
+    }
+  }
   p.x += p.vx;
   p.y += p.vy;
 
@@ -1076,6 +1153,7 @@ function updatePlayer() {
   p.tilt += ((p.vx * 6) - p.tilt) * 0.2;
   if (p.weaponTimer > 0) p.weaponTimer--;
   else p.weaponMode = 'pistol';
+  if (p.dashCooldown > 0) p.dashCooldown--;
 
   if (p.onGround && Math.abs(p.vx) > 1.5 && p.runDustTimer === 0) {
     spawnParticles(p.x - p.facing * 8, p.y + 30, ['#d8b57a','#b48a53','#6a4e31'], 3);
@@ -1403,19 +1481,27 @@ function checkLevelComplete() {
   const allGems    = state.gems.every(g=>g.collected);
   const allEnemies = state.enemies.every(e=>!e.alive);
   const bossDown   = !state.boss||!state.boss.alive;
-  if (allGems && allEnemies && bossDown){
+  const onFinalLevel = state.level === LEVELS.length - 1;
+  const reachedFinishGate = onFinalLevel && bossDown && state.player.x >= state.finishZoneX - 20;
+  if ((allGems && allEnemies && bossDown) || reachedFinishGate){
     state.complete = true;
     const L = LEVELS[state.level];
-    const msg = currentLevel===LEVELS.length-1 ? "SHAME DEFEATED! Greg is FREE!" :
+    const msg = currentLevel===LEVELS.length-1 ? "SHAME DEFEATED! Extracting Greg to the victory screen!" :
                 currentLevel===0 ? "First wall broken. Keep moving forward!" :
                 currentLevel===LEVELS.length-2 ? "One final push. Face yourself." :
                 "Sector clear. Keep running toward your truth.";
     state.msgText=msg; state.msgTimer=180;
 
-    setTimeout(()=>{
+    if (transitionTimer) clearTimeout(transitionTimer);
+    transitionTimer = setTimeout(()=>{
+      transitionTimer = null;
       if (currentLevel >= LEVELS.length - 1) {
-        gamePhase='won';
-        buildWinScreen();
+        gamePhase='cutscene';
+        cutscenePlayer = new CutscenePlayer(()=>{
+          gamePhase='won';
+          buildWinScreen();
+        });
+        cutscenePlayer.play('victory');
         return;
       }
       gamePhase='cutscene';
@@ -1425,8 +1511,12 @@ function checkLevelComplete() {
         gamePhase='playing';
         loop();
       });
-      cutscenePlayer.play(L.afterCutscene);
+      cutscenePlayer.play(L.afterCutscene || 'after_level1');
     }, 2500);
+  }
+  if (onFinalLevel && bossDown && !reachedFinishGate && state.msgTimer < 30) {
+    state.msgText = "Boss down! Move to the EXTRACT beacon on the far right.";
+    state.msgTimer = 45;
   }
 }
 

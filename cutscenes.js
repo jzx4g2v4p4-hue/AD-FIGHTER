@@ -446,33 +446,84 @@ function drawBossIntro(ctx, W, H, f) {
 }
 
 function drawVictory(ctx, W, H, f) {
-  // full rainbow background
-  for(let i=0;i<6;i++){ctx.fillStyle=PRIDE[i]; ctx.fillRect(0,i*(H/6),W,Math.ceil(H/6)+1);}
-  // sparkles everywhere
-  ctx.fillStyle='#fff';
-  for(let i=0;i<30;i++){
-    const sx=(i*137+(f*2))%W, sy=(i*97+(f))%H;
-    const s=Math.sin(f*0.1+i)*0.7+1;
-    ctx.globalAlpha=Math.abs(Math.sin(f*0.07+i));
-    ctx.fillRect(sx,sy,s*3,s*3);
+  // Metal-slug style sunset sky
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, '#ff975e');
+  sky.addColorStop(0.45, '#ff5f88');
+  sky.addColorStop(1, '#50204f');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H);
+
+  // heart-shaped sunset
+  const sunX = W/2, sunY = 88;
+  ctx.save();
+  ctx.translate(sunX, sunY);
+  ctx.fillStyle = 'rgba(255,226,140,0.95)';
+  ctx.beginPath();
+  ctx.moveTo(0, 22);
+  ctx.bezierCurveTo(40, -18, 74, 18, 0, 66);
+  ctx.bezierCurveTo(-74, 18, -40, -18, 0, 22);
+  ctx.fill();
+  ctx.restore();
+
+  // battlefield silhouettes / ruins
+  for (let i=0; i<7; i++) {
+    const rx = (i*58 + (f*0.35)) % (W+80) - 40;
+    ctx.fillStyle='rgba(40,18,30,0.38)';
+    ctx.fillRect(rx, H-120, 22, 68);
+    ctx.fillRect(rx+4, H-132, 14, 14);
   }
-  ctx.globalAlpha=1;
-  // ground
-  ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(0,H-70,W,70);
-  // Greg LARGE and triumphant, centre stage
-  const bounce = Math.abs(Math.sin(f*0.06))*8;
-  drawGreg8bit(ctx, W/2, H-80-bounce, 2, 1);
-  // Stars/confetti
-  for(let i=0;i<20;i++){
+  ctx.fillStyle='rgba(0,0,0,0.28)';
+  ctx.fillRect(0, H-64, W, 64);
+
+  // sparkling confetti
+  for (let i=0;i<36;i++){
+    const sx=(i*77+(f*1.7))%W, sy=(i*53+(f*0.7))%H;
     ctx.fillStyle=PRIDE[i%6];
-    const cx=(i*73+f*1.5)%W, cy=(i*41+f*0.8)%H;
-    ctx.fillRect(cx,cy,5,5);
+    ctx.fillRect(sx,sy,3,3);
   }
-  // Title overlay
-  ctx.fillStyle='rgba(0,0,0,0.35)'; ctx.fillRect(0,10,W,40);
+
+  // Charlie left side, waving farewell
+  drawHeroVariant(ctx, 64, H-74, f+10, {
+    facing: 1, scale: 1.2, shirt: '#9ec5ff', pants: '#7080b5', skin: '#d6a370', beard: '#2d1b12', hair: '#2d1f12'
+  });
+  ctx.fillStyle='rgba(255,255,255,0.9)';
+  ctx.font='9px monospace';
+  ctx.fillText('Bye, Greg', 58, H-86);
+
+  // Greg + Jairo kiss centre (tasteful)
+  drawHeroVariant(ctx, W/2 - 28, H-74, f, {
+    facing: 1, scale: 1.38, shirt: '#ff5ea8', pants: '#5969a2', skin: '#c68642', beard: '#5c3a1e', hair: '#232323'
+  });
+  drawHeroVariant(ctx, W/2 + 8, H-74, f+7, {
+    facing: -1, scale: 1.42, shirt: '#ffcf6a', pants: '#80864a', skin: '#bf7d42', beard: '#2d1b08', hair: '#2d1b08'
+  });
+  const kissPulse = Math.abs(Math.sin(f*0.12))*2;
+  ctx.fillStyle='#ff9ac8';
+  ctx.fillRect(W/2-4, H-96-kissPulse, 2, 2);
+  ctx.fillRect(W/2+2, H-96-kissPulse, 2, 2);
+
+  // Chris joins as trio walking away
+  drawHeroVariant(ctx, W-90, H-74, f+20, {
+    facing: -1, scale: 1.34, shirt: '#89f2c4', pants: '#6b8b58', skin: '#b87740', beard: '#2b1b10', hair: '#1b1b1b'
+  });
   ctx.fillStyle='#fff';
-  ctx.font='bold 20px monospace'; ctx.textAlign='center';
-  ctx.fillText('GREG IS FREE', W/2, 38);
+  ctx.font='8px monospace';
+  ctx.fillText('Jairo + Greg + Chris', W-84, H-86);
+
+  // motion lines for arcade finish
+  ctx.globalAlpha = 0.28;
+  for (let i=0;i<5;i++) {
+    ctx.fillStyle = '#ffe8a8';
+    ctx.fillRect(20, H - 118 + i*8, W - 40, 2);
+  }
+  ctx.globalAlpha = 1;
+
+  // title
+  ctx.fillStyle='rgba(0,0,0,0.36)'; ctx.fillRect(0,10,W,42);
+  ctx.fillStyle='#fff';
+  ctx.font='bold 17px monospace'; ctx.textAlign='center';
+  ctx.fillText('MISSION COMPLETE: LOVE WINS', W/2, 37);
 }
 
 function drawVictorySnowball(ctx, W, H, f) {
@@ -679,9 +730,9 @@ const CUTSCENES = {
       title: 'Greg Mills — Proudly Himself',
       lines: [
         "The Shame Boss shatters into a thousand pieces of light.",
-        "Greg stands tall — mohawk blazing, beard fierce, heart open.",
-        "Charly smiles with tears in her eyes while Mark, Jairo, and Chris pull Greg into a laughing embrace.",
-        "He is not perfect. He is not finished. But he is FREE — and deeply loved."
+        "Greg kisses Jairo in the middle of the street while Chris cheers and pulls them into a laughing hug.",
+        "Charly gives Greg a soft smile and lets him go, proud that he finally chose his truth.",
+        "The three men walk into a heart-shaped sunset together — loud, gay, and deeply in love."
       ]
     },
     {
@@ -710,6 +761,9 @@ class CutscenePlayer {
     this.lineIndex = 0;
     this.sceneIndex = 0;
     this.scenes = [];
+    this.autoAdvanceTimer = null;
+    this.boundAdvance = () => this._advance();
+    this.onKeyDown = this._onKeyDown.bind(this);
   }
 
   play(key) {
@@ -740,6 +794,7 @@ class CutscenePlayer {
     this.el = el;
     this.csCanvas = document.getElementById('csCanvas');
     document.getElementById('csNext').addEventListener('click', () => this._advance());
+    window.addEventListener('keydown', this.onKeyDown);
   }
 
   _showScene() {
@@ -760,6 +815,8 @@ class CutscenePlayer {
       textEl.textContent += line[i++];
       if (i >= line.length) clearInterval(this._typer);
     }, 28);
+    if (this.autoAdvanceTimer) clearTimeout(this.autoAdvanceTimer);
+    this.autoAdvanceTimer = setTimeout(this.boundAdvance, 5200);
 
     const isLast = this.sceneIndex === this.scenes.length-1 && this.lineIndex === s.lines.length-1;
     document.getElementById('csNext').textContent = isLast ? '[ BEGIN ]' : '[ NEXT ]';
@@ -798,8 +855,17 @@ class CutscenePlayer {
 
   _cleanup() {
     clearInterval(this._typer);
+    if (this.autoAdvanceTimer) clearTimeout(this.autoAdvanceTimer);
     cancelAnimationFrame(this.animFrame);
+    window.removeEventListener('keydown', this.onKeyDown);
     if (this.el) { this.el.remove(); this.el = null; }
     this.csCanvas = null;
+  }
+
+  _onKeyDown(e) {
+    if (e.code === 'Space' || e.code === 'Enter') {
+      e.preventDefault();
+      this._advance();
+    }
   }
 }
