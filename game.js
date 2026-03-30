@@ -676,6 +676,7 @@ function buildWinScreen() {
   w.id = 'winScreen';
   w.innerHTML = `
     <div class="win-title">YOU DID IT, GREG!</div>
+    <div class="birthday-banner" aria-label="Happy Birthday Greg celebration">HAPPY BIRTHDAY GREG!</div>
     <div class="win-sub">Proud. Loud. Flamboyant. 100% Himself.</div>
     <div class="rainbow-bar">${PRIDE_COLS.map(c=>`<div style="background:${c}"></div>`).join('')}</div>
     <div class="win-text">

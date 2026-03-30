@@ -115,6 +115,14 @@ canvas {
 #cutscene .rainbow-bar div { flex: 1; }
 
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.5} }
+@keyframes rainbowShift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+@keyframes pulseGlow {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
 
 /* ---- START SCREEN ---- */
 #startScreen {
@@ -204,6 +212,31 @@ canvas {
   color: #adf;
   margin-bottom: 14px;
   letter-spacing: 1px;
+}
+
+#winScreen .birthday-banner {
+  font-size: clamp(28px, 7vw, 56px);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: 2px;
+  margin: 4px 0 14px;
+  text-transform: uppercase;
+  background: linear-gradient(
+    90deg,
+    #e40303 0%,
+    #ff8c00 16%,
+    #ffed00 32%,
+    #008026 48%,
+    #004dff 64%,
+    #750787 80%,
+    #e40303 100%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 16px rgba(255, 255, 255, 0.35);
+  animation: rainbowShift 3s linear infinite, pulseGlow 1.3s ease-in-out infinite;
 }
 
 #winScreen .rainbow-bar {
