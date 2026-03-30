@@ -2042,6 +2042,7 @@ function updateBoss() {
 }
 
 function updateStageSystems() {
+  if (state.complete) return;
   runStageEvents();
   if (state.player.meleeTimer > 0) state.player.meleeTimer--;
   state.meleeEffects = state.meleeEffects.filter(m => (--m.life) > 0);
@@ -2088,7 +2089,9 @@ function checkLevelComplete() {
   const bossDown   = !state.boss||!state.boss.alive;
   const onFinalLevel = state.level === LEVELS.length - 1;
   const reachedFinishGate = onFinalLevel && bossDown && state.player.x >= state.finishZoneX - 20;
-  if (state.bonusStage || (allGems && allEnemies && bossDown) || reachedFinishGate){
+  const reachedStageExit = !onFinalLevel && state.player.x >= state.worldW - 44;
+  const nonFinalClear = allGems && bossDown && (allEnemies || reachedStageExit);
+  if (state.bonusStage || nonFinalClear || reachedFinishGate){
     state.complete = true;
     const L = LEVELS[state.level];
     const msg = currentLevel===LEVELS.length-1 ? "TR DEFEATED! Greg takes back his story and heads to extraction!" :
