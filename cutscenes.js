@@ -945,7 +945,7 @@ const CUTSCENES = {
       scene: 'night_tender',
       title: 'A Quiet Night Together',
       lines: [
-        "For one precious night, Greg, Jairo, and Chris finally rest in the same bed, tangled up in laughs and warm hands.",
+        "For one precious night, Greg, Jairo, and Chris finally rest in the same bed after an animalistic, all-night blur of passion and laughter.",
         "Jairo kisses Greg's forehead while Chris pulls the blanket over all three and jokes that this is the real victory loot.",
         "Greg falls asleep between his lovers, feeling safe, chosen, and deeply loved."
       ]

@@ -204,10 +204,11 @@ function updateScreenShake() {
 const LEVELS = [
   {
     name:      "The Quiet Closet",
+    scenery:   "alley",
     bg:        ['#1a0533','#3d0f6b'],
     groundY:   300,
     worldW:    980,
-    platforms: [[150,260,100],[320,230,100],[480,200,100]],
+    platforms: [[110,270,90],[255,238,88],[380,206,96],[560,176,88]],
     gems:      [[180,240],[350,210],[510,180]],
     enemies:   [{x:250,y:288,dir:1},{x:610,y:288,dir:-1}],
     bossX:     null,
@@ -216,10 +217,11 @@ const LEVELS = [
   },
   {
     name:      "Neon Block",
+    scenery:   "neon",
     bg:        ['#0a1a4d','#1a3a8f'],
     groundY:   300,
     worldW:    1140,
-    platforms: [[100,250,80],[240,210,80],[400,170,100],[540,210,80],[700,180,90]],
+    platforms: [[160,262,120],[360,236,78],[525,200,76],[690,166,118]],
     gems:      [[120,230],[265,190],[430,150],[565,190],[725,160]],
     enemies:   [{x:160,y:288,dir:1},{x:340,y:288,dir:-1},{x:650,y:288,dir:1}],
     bossX:     null,
@@ -228,10 +230,11 @@ const LEVELS = [
   },
   {
     name:      "Open Streets",
+    scenery:   "city",
     bg:        ['#001a14','#00573f'],
     groundY:   300,
     worldW:    1260,
-    platforms: [[120,250,90],[260,220,100],[430,190,110],[620,230,100],[800,200,100]],
+    platforms: [[95,262,100],[255,228,86],[430,248,86],[570,214,98],[760,184,112],[930,222,76]],
     gems:      [[145,230],[290,200],[460,170],[645,210],[830,180]],
     enemies:   [{x:200,y:288,dir:1},{x:390,y:288,dir:-1},{x:560,y:288,dir:1},{x:840,y:288,dir:-1}],
     bossX:     null,
@@ -240,10 +243,11 @@ const LEVELS = [
   },
   {
     name:      "Parade Route",
+    scenery:   "parade",
     bg:        ['#14143a','#3f1f6b'],
     groundY:   300,
     worldW:    1360,
-    platforms: [[120,245,100],[290,205,95],[450,170,90],[620,215,110],[810,180,90],[940,220,70]],
+    platforms: [[120,258,120],[310,222,92],[500,188,92],[680,232,116],[900,190,90],[1050,218,86]],
     gems:      [[150,225],[320,185],[475,150],[655,195],[835,160],[960,200]],
     enemies:   [{x:210,y:288,dir:1},{x:370,y:288,dir:-1},{x:540,y:288,dir:1},{x:700,y:288,dir:-1},{x:910,y:288,dir:1}],
     bossX:     null,
@@ -252,10 +256,11 @@ const LEVELS = [
   },
   {
     name:      "Iron Rain District",
+    scenery:   "industrial",
     bg:        ['#0f0f1f','#342c54'],
     groundY:   300,
     worldW:    1480,
-    platforms: [[110,245,110],[300,200,100],[460,165,110],[640,220,95],[820,185,110],[980,225,100]],
+    platforms: [[130,266,110],[310,236,104],[480,202,92],[660,168,118],[860,228,96],[1045,192,106]],
     gems:      [[140,225],[330,180],[490,145],[670,200],[850,165],[1010,205]],
     enemies:   [{x:180,y:288,dir:1},{x:360,y:288,dir:-1},{x:520,y:288,dir:1},{x:730,y:288,dir:-1},{x:920,y:288,dir:1},{x:1080,y:288,dir:-1}],
     bossX:     null,
@@ -264,10 +269,11 @@ const LEVELS = [
   },
   {
     name:      "Steel Sky Highway",
+    scenery:   "highway",
     bg:        ['#071f29','#12576d'],
     groundY:   300,
     worldW:    1650,
-    platforms: [[140,248,95],[310,215,100],[490,180,95],[660,145,100],[820,210,95],[980,178,100],[1130,225,85]],
+    platforms: [[180,270,122],[390,238,94],[560,206,88],[730,174,112],[920,218,92],[1080,182,96],[1230,146,112]],
     gems:      [[170,228],[340,195],[520,160],[690,125],[850,190],[1010,158],[1155,205]],
     enemies:   [{x:220,y:288,dir:1},{x:410,y:288,dir:-1},{x:590,y:288,dir:1},{x:760,y:288,dir:-1},{x:930,y:288,dir:1},{x:1110,y:288,dir:-1}],
     bossX:     null,
@@ -275,20 +281,8 @@ const LEVELS = [
     afterCutscene: 'after_level6'
   },
   {
-    name:      "Greg Love Chaos Bonus",
-    type:      "bonus",
-    bg:        ['#150a2a','#35155b'],
-    groundY:   300,
-    worldW:    980,
-    platforms: [[160,245,110],[350,200,100],[560,230,110],[760,190,110]],
-    gems:      [],
-    enemies:   [],
-    bossX:     null,
-    msg:       "BONUS STAGE! Shower Jairo and Chris with hearts, kisses, and snowball chaos!",
-    afterCutscene: 'after_bonus'
-  },
-  {
     name:      "HR Tower Showdown",
+    scenery:   "boss",
     bg:        ['#1a0000','#4d0000'],
     groundY:   300,
     worldW:    1220,
@@ -298,6 +292,20 @@ const LEVELS = [
     bossX:     700,
     msg:       "Final boss TR fired Greg for being gay. Tonight Greg fights back with pride.",
     afterCutscene: 'victory'
+  },
+  {
+    name:      "Birthday Snowball Bonus",
+    type:      "bonus",
+    scenery:   "snow",
+    bg:        ['#100a38','#2d1d74'],
+    groundY:   300,
+    worldW:    1040,
+    platforms: [[170,242,120],[390,198,100],[610,230,120],[830,186,120]],
+    gems:      [],
+    enemies:   [],
+    bossX:     null,
+    msg:       "BONUS STAGE! Greg, Jairo, and Chris throw snowballs in pure chaos joy!",
+    afterCutscene: 'after_bonus'
   }
 ];
 
@@ -343,11 +351,11 @@ function initLevel(li) {
       { x: extendedWorldW - 230, y: 288, dir: -1 },
       { x: extendedWorldW - 90, y: 288, dir: -1 }
     ];
-  const powerups = [
-    { x: Math.min(extendedWorldW - 260, 260 + li * 85), y: L.groundY - 34, type: 'jairo', collected: false },
-    { x: Math.min(extendedWorldW - 180, 430 + li * 100), y: L.groundY - 34, type: 'chris', collected: false },
-    { x: Math.min(extendedWorldW - 105, 600 + li * 110), y: L.groundY - 34, type: 'mark', collected: false }
-  ];
+  const loadoutCycle = ['spread', 'beam', 'kiss', 'heavy'];
+  const levelPickup = loadoutCycle[li % loadoutCycle.length];
+  const powerups = (L.bossX || isBonus)
+    ? []
+    : [{ x: Math.min(extendedWorldW - 180, 330 + li * 98), y: L.groundY - 34, type: levelPickup, collected: false }];
   const stageEvents = buildStageEvents(li, extendedWorldW, L);
   const destructibles = spawnDestructiblesForLevel(L, extendedWorldW, li);
   const rescues = spawnRescuesForLevel(L, extendedWorldW);
@@ -586,7 +594,6 @@ function triggerStageEvent(ev) {
   }
   if (ev.type === 'reward') {
     spawnEventBanner('SUPPLY DROP', '#b7ffab');
-    state.powerups.push({ x: state.player.x + 100, y: L.groundY - 34, type: ['beam', 'heavy', 'kiss'][state.level % 3], collected: false });
     state.superMode = { active: true, armor: 2, timer: 420, name: 'Glitter Assault Float' };
     state.player.invincible = Math.max(state.player.invincible, 30);
     spawnEventBanner('SPECIAL RIDE: GLITTER ASSAULT FLOAT', '#ffd8ff', 95);
@@ -695,7 +702,7 @@ function buildWinScreen() {
 }
 
 function beginGame() {
-  setTouchControlsEnabled(true);
+  setTouchControlsEnabled(false);
   const ss = document.getElementById('startScreen');
   if (ss) ss.remove();
   currentLevel = 0;
@@ -709,6 +716,7 @@ function beginGame() {
   cutscenePlayer = new CutscenePlayer(() => {
     initLevel(0);
     gamePhase = 'playing';
+    setTouchControlsEnabled(true);
     loop();
   });
   cutscenePlayer.play('intro');
@@ -1157,6 +1165,41 @@ function drawWorld() {
     ctx.fillStyle='rgba(255,180,90,0.06)';
     ctx.fillRect(beamX, 0, 3, H);
   }
+  if (L.scenery === 'neon' || L.scenery === 'city') {
+    for (let i = 0; i < 9; i++) {
+      const bx = ((i * 120) - (state.camX * 0.42)) % (W + 160) - 80;
+      const bh = 70 + (i % 4) * 24;
+      ctx.fillStyle = 'rgba(14,18,34,0.58)';
+      ctx.fillRect(bx, H - 172 - bh, 54, bh);
+      ctx.fillStyle = 'rgba(120,230,255,0.2)';
+      for (let w = 0; w < 4; w++) ctx.fillRect(bx + 8 + w * 10, H - 164 - bh + (w % 2) * 18, 6, 8);
+    }
+  } else if (L.scenery === 'industrial' || L.scenery === 'boss') {
+    for (let i = 0; i < 8; i++) {
+      const sx = ((i * 170) - (state.camX * 0.58)) % (W + 190) - 90;
+      ctx.fillStyle = 'rgba(22,22,28,0.56)';
+      ctx.fillRect(sx, H - 188, 18, 116);
+      ctx.fillRect(sx + 24, H - 206, 12, 134);
+      ctx.fillStyle = 'rgba(255,120,95,0.16)';
+      ctx.fillRect(sx + 20, H - 212, 6, 16);
+    }
+  } else if (L.scenery === 'snow') {
+    for (let i = 0; i < 40; i++) {
+      const sx = ((i * 71) + frame * 1.5 - state.camX * 0.3) % (W + 40) - 20;
+      const sy = ((i * 37) + frame * 0.9) % H;
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.fillRect(sx, sy, 2, 2);
+    }
+    const lettersY = 78 + Math.sin(frame * 0.08) * 4;
+    const rainbow = ['#e40303','#ff8c00','#ffed00','#008026','#004dff','#750787'];
+    const bannerText = 'HAPPY BIRTHDAY GREG';
+    for (let i = 0; i < bannerText.length; i++) {
+      ctx.fillStyle = rainbow[i % rainbow.length];
+      ctx.font = 'bold 19px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(bannerText[i], 48 + i * 14, lettersY);
+    }
+  }
   // metal-slug style foreground girders
   for (let i = 0; i < 5; i++) {
     const gx = ((i * 210) - (state.camX * 0.95)) % (W + 200) - 100;
@@ -1177,7 +1220,7 @@ function drawWorld() {
     for(let i=0;i<6;i++){ctx.fillStyle=PRIDE_COLS[i]; ctx.fillRect(sx,py+8+i,pw,1);}
   });
   // extraction gate for final level so players can end the mission consistently
-  if (state.level === LEVELS.length - 1 && (!state.boss || !state.boss.alive)) {
+  if (L.bossX && (!state.boss || !state.boss.alive)) {
     const gateX = state.finishZoneX - state.camX;
     ctx.fillStyle='rgba(255,255,255,0.08)'; ctx.fillRect(gateX - 24, L.groundY - 62, 48, 62);
     ctx.fillStyle='#ff6bd6'; ctx.fillRect(gateX - 16, L.groundY - 54, 32, 10);
@@ -1294,6 +1337,7 @@ function justReleased(code) {
 
 // ---- HUD ----
 function drawHUD() {
+  const touchHudLift = document.getElementById('touchControls')?.classList.contains('enabled') ? 54 : 0;
   ctx.fillStyle='rgba(0,0,0,0.66)'; ctx.fillRect(0,0,W,52);
   ctx.fillStyle='#ff69b4'; ctx.font='bold 13px monospace'; ctx.textAlign='left';
   ctx.fillText('LEVEL '+(state.level+1)+': '+state.levelName, 10, 18);
@@ -1379,10 +1423,12 @@ function drawHUD() {
   // message
   if (state.msgTimer > 0){
     const alpha = Math.min(1, state.msgTimer/30);
+    const msgBoxY = H - 52 - touchHudLift;
+    const msgTextY = H - 30 - touchHudLift;
     ctx.globalAlpha=alpha;
-    ctx.fillStyle='rgba(0,0,0,0.65)'; ctx.fillRect(W/2-200,H-52,400,36);
+    ctx.fillStyle='rgba(0,0,0,0.65)'; ctx.fillRect(W/2-200,msgBoxY,400,36);
     ctx.fillStyle='#adf'; ctx.font='11px monospace'; ctx.textAlign='center';
-    ctx.fillText(state.msgText, W/2, H-30);
+    ctx.fillText(state.msgText, W/2, msgTextY);
     ctx.globalAlpha=1;
     state.msgTimer--;
   }
@@ -2088,14 +2134,15 @@ function checkLevelComplete() {
   const allGems    = state.gems.every(g=>g.collected);
   const allEnemies = state.enemies.every(e=>!e.alive);
   const bossDown   = !state.boss||!state.boss.alive;
+  const needsExtraction = !!LEVELS[state.level].bossX;
   const onFinalLevel = state.level === LEVELS.length - 1;
-  const reachedFinishGate = onFinalLevel && bossDown && state.player.x >= state.finishZoneX - 20;
+  const reachedFinishGate = needsExtraction && bossDown && state.player.x >= state.finishZoneX - 20;
   const reachedStageExit = !onFinalLevel && state.player.x >= state.worldW - 44;
-  const nonFinalClear = allGems && bossDown && (allEnemies || reachedStageExit);
+  const nonFinalClear = !needsExtraction && allGems && bossDown && (allEnemies || reachedStageExit);
   if (state.bonusStage || nonFinalClear || reachedFinishGate){
     state.complete = true;
     const L = LEVELS[state.level];
-    const msg = currentLevel===LEVELS.length-1 ? "TR DEFEATED! Greg takes back his story and heads to extraction!" :
+    const msg = currentLevel===LEVELS.length-1 ? "BONUS COMPLETE! Greg closes the celebration in style." :
                 currentLevel===0 ? "First wall broken. Keep moving forward!" :
                 currentLevel===LEVELS.length-2 ? "One final push. Face yourself." :
                 "Sector clear. Keep running toward your truth.";
@@ -2107,25 +2154,29 @@ function checkLevelComplete() {
     transitionTimer = setTimeout(()=>{
       transitionTimer = null;
       if (currentLevel >= LEVELS.length - 1) {
+        const endingScene = LEVELS[currentLevel].afterCutscene || 'after_bonus';
         gamePhase='cutscene';
+        setTouchControlsEnabled(false);
         cutscenePlayer = new CutscenePlayer(()=>{
           gamePhase='won';
           buildWinScreen();
         });
-        cutscenePlayer.play('victory');
+        cutscenePlayer.play(endingScene);
         return;
       }
       gamePhase='cutscene';
+      setTouchControlsEnabled(false);
       cutscenePlayer = new CutscenePlayer(()=>{
         currentLevel++;
         initLevel(currentLevel);
         gamePhase='playing';
+        setTouchControlsEnabled(true);
         loop();
       });
       cutscenePlayer.play(L.afterCutscene || 'after_level1');
     }, 2500);
   }
-  if (onFinalLevel && bossDown && !reachedFinishGate && state.msgTimer < 30) {
+  if (needsExtraction && bossDown && !reachedFinishGate && state.msgTimer < 30) {
     state.msgText = "Boss down! Move to the EXTRACT beacon on the far right.";
     state.msgTimer = 45;
   }
