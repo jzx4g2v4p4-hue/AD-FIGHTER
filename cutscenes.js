@@ -10,10 +10,13 @@ function paintScene(canvas, sceneId, frame) {
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
   // Subtle camera drift for more cinematic cutscene motion.
-  const driftX = Math.sin(frame * 0.025) * 1.8;
-  const driftY = Math.cos(frame * 0.02) * 1.2;
+  const driftX = Math.sin(frame * 0.025) * 2.4;
+  const driftY = Math.cos(frame * 0.02) * 1.6;
+  const punch = (sceneId === 'boss_intro' && frame % 150 > 120) ? 1.08 : 1;
   ctx.save();
   ctx.translate(driftX, driftY);
+  ctx.scale(punch, punch);
+  drawSceneAtmosphere(ctx, W, H, frame, sceneId);
 
   switch (sceneId) {
     case 'intro_bedroom':   drawBedroom(ctx, W, H, frame);   break;
@@ -32,15 +35,29 @@ function paintScene(canvas, sceneId, frame) {
     case 'dungeon_cell':    drawDungeonCell(ctx, W, H, frame); break;
     case 'rescue_vow':      drawRescueVow(ctx, W, H, frame); break;
     case 'boss_intro':      drawBossIntro(ctx, W, H, frame); break;
+    case 'hero_closeup_greg': drawHeroCloseup(ctx, W, H, frame, 'Greg'); break;
+    case 'hero_closeup_jairo': drawHeroCloseup(ctx, W, H, frame, 'Jairo'); break;
+    case 'hero_closeup_chris': drawHeroCloseup(ctx, W, H, frame, 'Chris'); break;
+    case 'bonus_celebration': drawBonusCelebration(ctx, W, H, frame); break;
     case 'victory':         drawVictory(ctx, W, H, frame);   break;
     case 'victory_snowball':drawVictorySnowball(ctx, W, H, frame); break;
     default:                drawDefault(ctx, W, H, frame);   break;
   }
   ctx.restore();
-  drawCinematicFX(ctx, W, H, frame);
+  drawCinematicFX(ctx, W, H, frame, sceneId);
 }
 
-function drawCinematicFX(ctx, W, H, f) {
+function drawSceneAtmosphere(ctx, W, H, frame, sceneId) {
+  const haze = sceneId === 'boss_intro' ? 'rgba(255,80,80,0.08)' : 'rgba(255,255,255,0.04)';
+  for (let i = 0; i < 16; i++) {
+    const x = ((i * 44) + frame * (0.25 + (i % 3) * 0.15)) % (W + 20) - 10;
+    const y = (i * 17 + Math.sin(frame * 0.02 + i) * 10 + 24) % H;
+    ctx.fillStyle = haze;
+    ctx.fillRect(x, y, 3, 3);
+  }
+}
+
+function drawCinematicFX(ctx, W, H, f, sceneId) {
   // soft scanlines + vignette for smoother perceived animation in cutscenes
   ctx.save();
   ctx.globalAlpha = 0.06;
@@ -57,6 +74,31 @@ function drawCinematicFX(ctx, W, H, f) {
   if (flash > 0) {
     ctx.fillStyle = `rgba(255,255,255,${flash * 0.35})`;
     ctx.fillRect(0, 0, W, H);
+  }
+  // letterbox + subtle speed lines for arcade cinema
+  const lb = sceneId === 'boss_intro' ? 20 : 12;
+  ctx.fillStyle = 'rgba(0,0,0,0.88)';
+  ctx.fillRect(0, 0, W, lb);
+  ctx.fillRect(0, H - lb, W, lb);
+  for (let i = 0; i < 14; i++) {
+    const sx = ((i * 52) - (f * 5.5)) % (W + 60) - 30;
+    ctx.fillStyle = `rgba(255,255,255,${sceneId === 'boss_intro' ? 0.1 : 0.04})`;
+    ctx.fillRect(sx, H * 0.2 + (i % 5) * 20, 24, 1);
+  }
+  if (sceneId === 'boss_intro' && f % 90 < 8) {
+    ctx.fillStyle = `rgba(255,70,70,${0.22 - (f % 90) * 0.02})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+  if (sceneId === 'boss_intro') {
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = 'bold 16px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('FINAL APPROACH', W / 2, 26);
+  } else if (sceneId === 'bonus_celebration') {
+    ctx.fillStyle = 'rgba(255,225,255,0.92)';
+    ctx.font = 'bold 14px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('BONUS CLEAR!', W / 2, 24);
   }
   ctx.restore();
 }
@@ -742,6 +784,39 @@ function drawDefault(ctx, W, H, f) {
   drawGreg8bit(ctx, W/2, H/2, 1.2, 1);
 }
 
+function drawHeroCloseup(ctx, W, H, f, who = 'Greg') {
+  ctx.fillStyle = who === 'Greg' ? '#1a1038' : (who === 'Jairo' ? '#1f2a3d' : '#1f3a2a');
+  ctx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 8; i++) {
+    ctx.fillStyle = `rgba(255,255,255,${0.04 + (i % 2) * 0.05})`;
+    ctx.fillRect(0, 30 + i * 18 + Math.sin(f * 0.05 + i) * 6, W, 2);
+  }
+  if (who === 'Greg') {
+    drawGreg8bit(ctx, W * 0.42, H * 0.8, 2.6, 1);
+  } else if (who === 'Jairo') {
+    drawHeroVariant(ctx, W * 0.42, H * 0.8, f, { facing: 1, scale: 2.5, shirt: '#ffcf6a', pants: '#80864a', skin: '#bf7d42', beard: '#2d1b08', hair: '#2d1b08' });
+  } else {
+    drawHeroVariant(ctx, W * 0.42, H * 0.8, f, { facing: 1, scale: 2.5, shirt: '#89f2c4', pants: '#6b8b58', skin: '#b87740', beard: '#2b1b10', hair: '#1b1b1b' });
+  }
+  ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(0, H - 54, W, 54);
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 18px monospace'; ctx.textAlign = 'left';
+  ctx.fillText(`${who.toUpperCase()} • HERO CLOSE-UP`, 18, H - 24);
+}
+
+function drawBonusCelebration(ctx, W, H, f) {
+  ctx.fillStyle = '#200b3f'; ctx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 30; i++) {
+    ctx.fillStyle = PRIDE[(i + Math.floor(f / 8)) % PRIDE.length];
+    ctx.fillRect((i * 27 + f * 2.8) % (W + 20) - 10, (i * 19) % H, 4, 4);
+  }
+  drawGreg8bit(ctx, 90, H - 70, 1.5, 1);
+  drawHeroVariant(ctx, W / 2, H - 72, f, { facing: -1, scale: 1.55, shirt: '#ffcf6a', pants: '#80864a', skin: '#bf7d42', beard: '#2d1b08', hair: '#2d1b08', throwPose: true });
+  drawHeroVariant(ctx, W - 96, H - 70, f + 25, { facing: -1, scale: 1.5, shirt: '#89f2c4', pants: '#6b8b58', skin: '#b87740', beard: '#2b1b10', hair: '#1b1b1b', throwPose: true });
+  ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(0, 8, W, 44);
+  ctx.fillStyle = '#fff'; ctx.font='bold 15px monospace'; ctx.textAlign='center';
+  ctx.fillText('BONUS CLEAR • LOVE CHAOS MULTIPLIER!', W / 2, 35);
+}
+
 // ============================================================
 //  CUTSCENE DEFINITIONS
 // ============================================================
@@ -897,6 +972,33 @@ const CUTSCENES = {
 
   after_level6: [
     {
+      scene: 'hero_closeup_greg',
+      title: 'Greg Locks In',
+      subtitle: 'Resolve rising',
+      lines: [
+        "Greg breathes once, steady and fierce, and lets every doubt burn away.",
+        "His grin sharpens. \"No one takes my people from me.\""
+      ]
+    },
+    {
+      scene: 'hero_closeup_jairo',
+      title: 'Jairo Signal',
+      subtitle: 'Signal from the dungeon',
+      lines: [
+        "On a cracked monitor feed, Jairo nods with that fearless smile.",
+        "\"You already won in your heart. Now finish the run.\""
+      ]
+    },
+    {
+      scene: 'hero_closeup_chris',
+      title: 'Chris Signal',
+      subtitle: 'Signal from the dungeon',
+      lines: [
+        "Chris laughs through the static and raises a fist to the camera.",
+        "\"Bring the chaos, babe. We trust you.\""
+      ]
+    },
+    {
       scene: 'rescue_vow',
       title: 'No One Gets Left Behind',
       lines: [
@@ -908,10 +1010,23 @@ const CUTSCENES = {
     {
       scene: 'boss_intro',
       title: 'Final Approach',
+      subtitle: 'Warning: Core Hostile',
       lines: [
         "The sky burns red as TR steps out for one last stand above the dungeon controls.",
         "TR once fired Greg for being gay and now cages the men Greg loves, pretending cruelty is power.",
         "Greg hears every ally in his mind — and Jairo and Chris strongest of all — then chambers a round and steps forward."
+      ]
+    }
+  ],
+
+  after_bonus: [
+    {
+      scene: 'bonus_celebration',
+      title: 'Bonus Debrief',
+      subtitle: 'Arcade intermission',
+      lines: [
+        "Greg, Jairo, and Chris are still laughing from the bonus chaos warmup.",
+        "\"Now we finish this together,\" Greg says, loading fresh ammo and smiling hard."
       ]
     }
   ],
@@ -980,6 +1095,7 @@ class CutscenePlayer {
       </div>
       <div class="cs-art"><canvas id="csCanvas" width="320" height="180"></canvas></div>
       <div class="cs-title" id="csTitle"></div>
+      <div class="cs-subtitle" id="csSubtitle"></div>
       <div class="cs-text" id="csText"></div>
       <button class="cs-next" id="csNext">[ NEXT ]</button>
     `;
@@ -993,6 +1109,7 @@ class CutscenePlayer {
   _showScene() {
     const s = this.scenes[this.sceneIndex];
     document.getElementById('csTitle').textContent = s.title;
+    document.getElementById('csSubtitle').textContent = s.subtitle || this._subtitleForScene(s.scene);
     this._showLine();
   }
 
@@ -1009,7 +1126,8 @@ class CutscenePlayer {
       if (i >= line.length) clearInterval(this._typer);
     }, 28);
     if (this.autoAdvanceTimer) clearTimeout(this.autoAdvanceTimer);
-    this.autoAdvanceTimer = setTimeout(this.boundAdvance, 5200);
+    const punctuationDelay = (line.match(/[!?]/g) || []).length * 260 + (line.match(/—/g) || []).length * 220;
+    this.autoAdvanceTimer = setTimeout(this.boundAdvance, 4800 + punctuationDelay);
 
     const isLast = this.sceneIndex === this.scenes.length-1 && this.lineIndex === s.lines.length-1;
     document.getElementById('csNext').textContent = isLast ? '[ BEGIN ]' : '[ NEXT ]';
@@ -1060,5 +1178,13 @@ class CutscenePlayer {
       e.preventDefault();
       this._advance();
     }
+  }
+
+  _subtitleForScene(sceneId) {
+    if (sceneId === 'boss_intro') return 'WARNING ENERGY • FINAL APPROACH';
+    if (sceneId.startsWith('hero_closeup')) return 'Hero close-up';
+    if (sceneId === 'bonus_celebration') return 'Playful intermission scene';
+    if (sceneId === 'victory_snowball') return 'Post-battle joy';
+    return 'Cinematic story sequence';
   }
 }
