@@ -372,6 +372,7 @@ function initLevel(li) {
     player: {
       x:60, y:260, vx:0, vy:0, onGround:false, facing:1, hp:4, maxHp:4, invincible:0,
       coyote: 0, gunRecoil: 0, gunFlash: 0, runFrame: 0,
+      crouching: false, aimMode: 'forward',
       runDustTimer: 0, landingImpact: 0, tilt: 0,
       facingVisual: 1,
       recoilPose: 0,
@@ -406,6 +407,7 @@ function initLevel(li) {
       deadTimer: 0
     } : null,
     bullets:  [],
+    grenades: [],
     enemyShots: [],
     explosions: [],
     particles: [],
@@ -1070,6 +1072,18 @@ function drawBullet(b) {
   ctx.restore();
 }
 
+function drawGrenade(g) {
+  const x = Math.round(g.x - state.camX), y = Math.round(g.y);
+  ctx.save();
+  ctx.fillStyle = '#3f4f74';
+  ctx.fillRect(x - 4, y - 4, 8, 8);
+  ctx.fillStyle = '#bad4ff';
+  ctx.fillRect(x - 2, y - 2, 4, 4);
+  ctx.fillStyle = 'rgba(255,210,120,0.45)';
+  ctx.fillRect(x - 1, y - 8, 2, 3);
+  ctx.restore();
+}
+
 function drawEnemyShot(s) {
   const x = Math.round(s.x - state.camX), y = Math.round(s.y);
   const flicker = Math.abs(Math.sin((frame + s.x) * 0.32));
@@ -1474,10 +1488,12 @@ function updatePlayer() {
   const { maxSpeed, accel, airAccel, friction, grav, jumpPow } = ARCADE_TUNING.move;
   const movingLeft = keys['ArrowLeft'] || keys['KeyA'];
   const movingRight = keys['ArrowRight'] || keys['KeyD'];
-  const jumpHeld = keys['Space'] || keys['ArrowUp'] || keys['KeyW'];
+  const aimingUp = keys['ArrowUp'] || keys['KeyW'];
+  const aimingDown = keys['ArrowDown'] || keys['KeyS'];
+  const jumpHeld = keys['Space'] || aimingUp;
   const jumpTap = justPressed('Space') || justPressed('ArrowUp') || justPressed('KeyW');
   const jumpRelease = justReleased('Space') || justReleased('ArrowUp') || justReleased('KeyW');
-  const dashTap = justPressed('ShiftLeft') || justPressed('ShiftRight') || justPressed('ArrowDown') || justPressed('KeyS');
+  const dashTap = justPressed('ShiftLeft') || justPressed('ShiftRight');
   const dashDir = movingLeft && !movingRight ? -1 : (movingRight && !movingLeft ? 1 : p.facing);
 
   const changingDirection = (movingLeft && p.vx > 1.5) || (movingRight && p.vx < -1.5);
@@ -1491,6 +1507,12 @@ function updatePlayer() {
     p.vx *= p.onGround ? friction : 0.94;
   }
   p.vx = Math.max(-maxSpeed, Math.min(maxSpeed, p.vx));
+  p.crouching = p.onGround && aimingDown && Math.abs(p.vx) < 1.35 && p.dashTimer === 0;
+  if (p.crouching) p.vx *= 0.55;
+  if (aimingUp && p.onGround && !jumpTap) {
+    p.aimMode = Math.abs(p.vx) > 1 || movingLeft || movingRight ? 'diagUp' : 'up';
+  } else if (p.crouching) p.aimMode = 'low';
+  else p.aimMode = 'forward';
 
   if (p.onGround) p.coyote = 10;
   else p.coyote = Math.max(0, p.coyote - 1);
@@ -1651,20 +1673,25 @@ function updatePlayer() {
 function fireShot() {
   const p = state.player;
   const mode = p.weaponMode || 'pistol';
-  const baseX = p.x + p.facing * 18;
-  const baseY = p.y + 10;
+  const aim = getAimProfile(p);
+  const baseX = p.x + aim.muzzleX;
+  const baseY = p.y + aim.muzzleY;
+  const speedScale = mode === 'beam' ? 10.8 : (mode === 'heavy' ? 6 : (mode === 'kiss' ? 5.2 : 7.3));
+  const shotVX = aim.vx * speedScale;
+  const shotVY = aim.vy * speedScale;
   if (mode === 'spread') {
     [-5, 0, 5].forEach((offsetY, i) => {
-      state.bullets.push({ x: baseX, y: baseY + offsetY, vx: p.facing * (6.1 + i * 0.35), dir: p.facing, life: 36, type: 'spread' });
+      const s = 6.1 + i * 0.35;
+      state.bullets.push({ x: baseX, y: baseY + offsetY, vx: aim.vx * s, vy: aim.vy * s, dir: p.facing, life: 36, type: 'spread' });
     });
   } else if (mode === 'beam') {
-    state.bullets.push({ x: baseX, y: baseY, vx: p.facing * 10.8, dir: p.facing, life: 44, type: 'beam', pierce: 4 });
+    state.bullets.push({ x: baseX, y: baseY, vx: shotVX, vy: shotVY, dir: p.facing, life: 44, type: 'beam', pierce: 4 });
   } else if (mode === 'heavy') {
-    state.bullets.push({ x: baseX, y: baseY - 1, vx: p.facing * 6, dir: p.facing, life: 60, type: 'heavy' });
+    state.bullets.push({ x: baseX, y: baseY - 1, vx: shotVX, vy: shotVY, dir: p.facing, life: 60, type: 'heavy' });
   } else if (mode === 'kiss') {
-    state.bullets.push({ x: baseX, y: baseY - 2, vx: p.facing * 5.2, vy: -1.2, dir: p.facing, life: 52, type: 'glitter' });
+    state.bullets.push({ x: baseX, y: baseY - 2, vx: shotVX, vy: shotVY - 1.2, dir: p.facing, life: 52, type: 'glitter' });
   } else {
-    state.bullets.push({ x: baseX, y: baseY, vx: p.facing * 7.3, dir: p.facing, life: 70, type: 'pistol' });
+    state.bullets.push({ x: baseX, y: baseY, vx: shotVX, vy: shotVY, dir: p.facing, life: 70, type: 'pistol' });
   }
   p.gunRecoil = mode === 'kiss' ? 9 : (mode === 'beam' ? 5 : (mode === 'heavy' ? 11 : 7));
   p.gunFlash = mode === 'beam' ? 6 : (mode === 'heavy' ? 7 : 5);
@@ -1685,6 +1712,14 @@ function fireShot() {
   if (Number.isFinite(p.weaponAmmo)) p.weaponAmmo--;
   if (mode === 'heavy') triggerHitStop(1);
   addImpactShake('bullet');
+}
+
+function getAimProfile(p) {
+  const diag = Math.SQRT1_2;
+  if (p.aimMode === 'up') return { vx: 0, vy: -1, muzzleX: p.facing * 5, muzzleY: 2 };
+  if (p.aimMode === 'diagUp') return { vx: p.facing * diag, vy: -diag, muzzleX: p.facing * 14, muzzleY: 4 };
+  if (p.aimMode === 'low') return { vx: p.facing, vy: 0, muzzleX: p.facing * 22, muzzleY: 19 };
+  return { vx: p.facing, vy: 0, muzzleX: p.facing * 18, muzzleY: 10 };
 }
 
 function tryMeleeStrike() {
@@ -1738,9 +1773,35 @@ function updateBombs() {
   if (justPressed('KeyL') && state.bombs > 0 && state.bombCooldown === 0) {
     const p = state.player;
     state.bombs--;
-    state.bombCooldown = 24;
-    spawnExplosion(p.x + p.facing * 68, p.y + 10, 76);
+    state.bombCooldown = 18;
+    state.grenades.push({
+      x: p.x + p.facing * 10,
+      y: p.y + (p.crouching ? 16 : 8),
+      vx: p.facing * (p.crouching ? 3.9 : 4.8),
+      vy: p.crouching ? -2.8 : -5.6,
+      life: 52
+    });
+    spawnScorePopup(p.x, p.y - 24, 'GRENADE!', '#ffd78e', 22);
   }
+}
+
+function updateGrenades() {
+  state.grenades = state.grenades.filter(g => {
+    g.x += g.vx;
+    g.y += g.vy;
+    g.vy += 0.28;
+    g.life--;
+    if (g.y > H - 32) {
+      g.y = H - 32;
+      g.vy *= -0.45;
+      g.vx *= 0.82;
+    }
+    if (g.life <= 0 || g.x < 0 || g.x > state.worldW) {
+      spawnExplosion(g.x, g.y, 76);
+      return false;
+    }
+    return true;
+  });
 }
 
 function updateExplosions() {
@@ -2191,6 +2252,7 @@ function loop() {
   if (state.hitStopFrames === 0) {
     updateShooting();
     updateBombs();
+    updateGrenades();
     updateBullets();
     updateEnemyShots();
     updateExplosions();
@@ -2215,6 +2277,7 @@ function loop() {
   drawBonusTargets();
   state.prideFlags.forEach(drawPrideFlag);
   state.bullets.forEach(drawBullet);
+  state.grenades.forEach(drawGrenade);
   state.enemyShots.forEach(drawEnemyShot);
   drawExplosions();
   state.enemies.forEach(drawEnemy);
