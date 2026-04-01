@@ -31,7 +31,11 @@ The game features fully animated pixel-art cutscenes at every story beat:
 |-----|--------|
 | Arrow Keys / WASD | Move |
 | Space / W / ↑ | Jump |
-| Jump on enemies | Defeat them |
+| J / K / X | Fire weapon |
+| Hold ↓ (or S) + Fire | Crouch fire (Metal-Slug style) |
+| Hold ↑ (or W) + Fire | Shoot up / diagonal up |
+| Shift | Combat roll |
+| L | Throw grenade |
 
 ## Levels
 
