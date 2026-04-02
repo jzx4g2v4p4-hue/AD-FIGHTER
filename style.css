@@ -31,6 +31,7 @@ canvas {
   image-rendering: pixelated;
   border-radius: 16px;
   box-shadow: 0 12px 36px rgba(0,0,0,0.45);
+  animation: cabinetFloat 4.8s ease-in-out infinite;
 }
 
 #overlay {
@@ -172,6 +173,11 @@ canvas {
   cursor: pointer;
   letter-spacing: 2px;
   animation: blink 1s infinite;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+#startScreen .start-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(255,105,180,0.45);
 }
 
 #startScreen .controls {
@@ -264,6 +270,11 @@ canvas {
   font-size: 14px;
   cursor: pointer;
   letter-spacing: 2px;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+#winScreen .start-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(255,105,180,0.45);
 }
 
 
@@ -309,6 +320,7 @@ canvas {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+  transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
 }
 
 .touch-btn.action {
@@ -326,6 +338,12 @@ canvas {
   background: rgba(255,105,180,0.85);
   border-color: #fff;
   transform: translateY(1px) scale(0.98);
+  box-shadow: 0 0 18px rgba(255,105,180,0.46);
+}
+
+@keyframes cabinetFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
 }
 
 @media (hover: hover) and (pointer: fine) {
