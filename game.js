@@ -207,10 +207,10 @@ const LEVELS = [
     scenery:   "alley",
     bg:        ['#1a0533','#3d0f6b'],
     groundY:   300,
-    worldW:    980,
-    platforms: [[110,270,90],[255,238,88],[380,206,96],[560,176,88]],
-    gems:      [[180,240],[350,210],[510,180]],
-    enemies:   [{x:250,y:288,dir:1},{x:610,y:288,dir:-1}],
+    worldW:    1260,
+    platforms: [[110,270,90],[255,238,88],[380,206,96],[560,176,88],[730,216,96],[900,186,108]],
+    gems:      [[180,240],[350,210],[510,180],[760,186],[935,160]],
+    enemies:   [{x:250,y:288,dir:1},{x:610,y:288,dir:-1},{x:880,y:288,dir:1}],
     bossX:     null,
     msg:       "Collect all gems and blast the Doubt Demons with fabulous force!",
     afterCutscene: 'after_level1'
@@ -220,10 +220,10 @@ const LEVELS = [
     scenery:   "neon",
     bg:        ['#0a1a4d','#1a3a8f'],
     groundY:   300,
-    worldW:    1140,
-    platforms: [[160,262,120],[360,236,78],[525,200,76],[690,166,118]],
-    gems:      [[120,230],[265,190],[430,150],[565,190],[725,160]],
-    enemies:   [{x:160,y:288,dir:1},{x:340,y:288,dir:-1},{x:650,y:288,dir:1}],
+    worldW:    1450,
+    platforms: [[160,262,120],[360,236,78],[525,200,76],[690,166,118],[880,214,104],[1080,182,114]],
+    gems:      [[120,230],[265,190],[430,150],[565,190],[725,160],[905,178],[1110,156]],
+    enemies:   [{x:160,y:288,dir:1},{x:340,y:288,dir:-1},{x:650,y:288,dir:1},{x:930,y:288,dir:-1}],
     bossX:     null,
     msg:       "Push forward. Keep firing. Queer joy gets the last word.",
     afterCutscene: 'after_level2'
@@ -233,10 +233,10 @@ const LEVELS = [
     scenery:   "city",
     bg:        ['#001a14','#00573f'],
     groundY:   300,
-    worldW:    1260,
-    platforms: [[95,262,100],[255,228,86],[430,248,86],[570,214,98],[760,184,112],[930,222,76]],
-    gems:      [[145,230],[290,200],[460,170],[645,210],[830,180]],
-    enemies:   [{x:200,y:288,dir:1},{x:390,y:288,dir:-1},{x:560,y:288,dir:1},{x:840,y:288,dir:-1}],
+    worldW:    1620,
+    platforms: [[95,262,100],[255,228,86],[430,248,86],[570,214,98],[760,184,112],[930,222,76],[1110,194,102],[1300,164,118]],
+    gems:      [[145,230],[290,200],[460,170],[645,210],[830,180],[1130,165],[1325,142]],
+    enemies:   [{x:200,y:288,dir:1},{x:390,y:288,dir:-1},{x:560,y:288,dir:1},{x:840,y:288,dir:-1},{x:1180,y:288,dir:1}],
     bossX:     null,
     msg:       "Run-and-gun through the noise. You're getting stronger and gayer.",
     afterCutscene: 'after_level3'
@@ -246,10 +246,10 @@ const LEVELS = [
     scenery:   "parade",
     bg:        ['#14143a','#3f1f6b'],
     groundY:   300,
-    worldW:    1360,
-    platforms: [[120,258,120],[310,222,92],[500,188,92],[680,232,116],[900,190,90],[1050,218,86]],
-    gems:      [[150,225],[320,185],[475,150],[655,195],[835,160],[960,200]],
-    enemies:   [{x:210,y:288,dir:1},{x:370,y:288,dir:-1},{x:540,y:288,dir:1},{x:700,y:288,dir:-1},{x:910,y:288,dir:1}],
+    worldW:    1780,
+    platforms: [[120,258,120],[310,222,92],[500,188,92],[680,232,116],[900,190,90],[1050,218,86],[1240,184,108],[1450,154,110]],
+    gems:      [[150,225],[320,185],[475,150],[655,195],[835,160],[960,200],[1265,160],[1482,130]],
+    enemies:   [{x:210,y:288,dir:1},{x:370,y:288,dir:-1},{x:540,y:288,dir:1},{x:700,y:288,dir:-1},{x:910,y:288,dir:1},{x:1300,y:288,dir:-1}],
     bossX:     null,
     msg:       "Friends are near. Clear the path and keep your courage loud and glittery.",
     afterCutscene: 'after_level4'
@@ -259,10 +259,10 @@ const LEVELS = [
     scenery:   "industrial",
     bg:        ['#0f0f1f','#342c54'],
     groundY:   300,
-    worldW:    1480,
-    platforms: [[130,266,110],[310,236,104],[480,202,92],[660,168,118],[860,228,96],[1045,192,106]],
-    gems:      [[140,225],[330,180],[490,145],[670,200],[850,165],[1010,205]],
-    enemies:   [{x:180,y:288,dir:1},{x:360,y:288,dir:-1},{x:520,y:288,dir:1},{x:730,y:288,dir:-1},{x:920,y:288,dir:1},{x:1080,y:288,dir:-1}],
+    worldW:    1940,
+    platforms: [[130,266,110],[310,236,104],[480,202,92],[660,168,118],[860,228,96],[1045,192,106],[1250,220,96],[1450,180,116]],
+    gems:      [[140,225],[330,180],[490,145],[670,200],[850,165],[1010,205],[1270,192],[1478,150]],
+    enemies:   [{x:180,y:288,dir:1},{x:360,y:288,dir:-1},{x:520,y:288,dir:1},{x:730,y:288,dir:-1},{x:920,y:288,dir:1},{x:1080,y:288,dir:-1},{x:1380,y:288,dir:1}],
     bossX:     null,
     msg:       "Heavy resistance. Keep rolling, firing, and serving pure pride.",
     afterCutscene: 'after_level5'
@@ -272,10 +272,10 @@ const LEVELS = [
     scenery:   "highway",
     bg:        ['#071f29','#12576d'],
     groundY:   300,
-    worldW:    1650,
-    platforms: [[180,270,122],[390,238,94],[560,206,88],[730,174,112],[920,218,92],[1080,182,96],[1230,146,112]],
-    gems:      [[170,228],[340,195],[520,160],[690,125],[850,190],[1010,158],[1155,205]],
-    enemies:   [{x:220,y:288,dir:1},{x:410,y:288,dir:-1},{x:590,y:288,dir:1},{x:760,y:288,dir:-1},{x:930,y:288,dir:1},{x:1110,y:288,dir:-1}],
+    worldW:    2140,
+    platforms: [[180,270,122],[390,238,94],[560,206,88],[730,174,112],[920,218,92],[1080,182,96],[1230,146,112],[1450,204,96],[1670,170,122]],
+    gems:      [[170,228],[340,195],[520,160],[690,125],[850,190],[1010,158],[1155,205],[1480,176],[1702,144]],
+    enemies:   [{x:220,y:288,dir:1},{x:410,y:288,dir:-1},{x:590,y:288,dir:1},{x:760,y:288,dir:-1},{x:930,y:288,dir:1},{x:1110,y:288,dir:-1},{x:1510,y:288,dir:1}],
     bossX:     null,
     msg:       "Final gauntlet. This is full run-and-gun queer chaos.",
     afterCutscene: 'after_level6'
@@ -285,9 +285,9 @@ const LEVELS = [
     scenery:   "boss",
     bg:        ['#1a0000','#4d0000'],
     groundY:   300,
-    worldW:    1220,
-    platforms: [[120,240,100],[290,198,95],[470,240,95],[640,205,95]],
-    gems:      [[145,220],[315,178],[495,220],[665,185]],
+    worldW:    1540,
+    platforms: [[120,240,100],[290,198,95],[470,240,95],[640,205,95],[820,238,110],[1010,202,102]],
+    gems:      [[145,220],[315,178],[495,220],[665,185],[845,212],[1035,180]],
     enemies:   [],
     bossX:     700,
     msg:       "Final boss TR fired Greg for being gay. Tonight Greg fights back with pride.",
@@ -327,6 +327,10 @@ let cutscenePlayer = null;
 let campaignScore = 0;
 let transitionTimer = null;
 const touchPointerMap = new Map();
+
+function wrapParallax(value, spacing, offset = 0) {
+  return ((value + offset) % spacing + spacing) % spacing;
+}
 
 // ---- INIT ----
 function initLevel(li) {
@@ -1124,6 +1128,13 @@ function drawWorld() {
   const L = LEVELS[state.level];
   ctx.fillStyle=L.bg[0]; ctx.fillRect(0,0,W,H/2);
   ctx.fillStyle=L.bg[1]; ctx.fillRect(0,H/2,W,H/2);
+  for (let i = 0; i < 5; i++) {
+    const hazeY = 28 + i * 26 + Math.sin((frame + i * 18) * 0.018) * 5;
+    const hazeX = wrapParallax(i * 140 - state.camX * 0.12 + frame * 0.45, W + 180) - 90;
+    const hazeW = 170 + i * 20;
+    ctx.fillStyle = `rgba(255,255,255,${L.scenery === 'boss' ? 0.028 : 0.04})`;
+    ctx.fillRect(hazeX, hazeY, hazeW, 8);
+  }
   // distant mountains
   for (let i = 0; i < 7; i++) {
     const mx = ((i * 180) - (state.camX * 0.12)) % (W + 280) - 140;
@@ -1142,6 +1153,26 @@ function drawWorld() {
     ctx.fillStyle = 'rgba(255,255,255,0.08)';
     ctx.fillRect(cloudX, cloudY, 62, 12);
     ctx.fillRect(cloudX + 12, cloudY - 6, 40, 8);
+  }
+  // Metal Slug inspired war silhouettes: convoy trucks and a passing gunship.
+  for (let i = 0; i < 4; i++) {
+    const convoyX = wrapParallax(i * 210 - state.camX * 0.48 + frame * 0.3, W + 260) - 130;
+    const convoyY = H - 116 + (i % 2) * 8;
+    ctx.fillStyle = 'rgba(20,24,26,0.44)';
+    ctx.fillRect(convoyX, convoyY, 62, 16);
+    ctx.fillRect(convoyX + 10, convoyY - 12, 24, 10);
+    ctx.fillRect(convoyX + 6, convoyY + 16, 12, 4);
+    ctx.fillRect(convoyX + 42, convoyY + 16, 12, 4);
+  }
+  for (let i = 0; i < 2; i++) {
+    const heliX = wrapParallax(i * 340 - state.camX * 0.32 - frame * 1.5, W + 300) - 120;
+    const heliY = 70 + i * 34 + Math.sin((frame + i * 41) * 0.05) * 5;
+    ctx.fillStyle = 'rgba(16,24,30,0.42)';
+    ctx.fillRect(heliX, heliY, 46, 12);
+    ctx.fillRect(heliX + 14, heliY - 8, 12, 6);
+    ctx.fillRect(heliX - 8, heliY + 5, 10, 2);
+    ctx.fillStyle = 'rgba(190,220,255,0.2)';
+    ctx.fillRect(heliX + 12, heliY + 1, 10, 3);
   }
   // metal-slug style parallax jungle + ruins
   for (let i=0;i<6;i++) {
@@ -1185,8 +1216,14 @@ function drawWorld() {
       const bh = 70 + (i % 4) * 24;
       ctx.fillStyle = 'rgba(14,18,34,0.58)';
       ctx.fillRect(bx, H - 172 - bh, 54, bh);
-      ctx.fillStyle = 'rgba(120,230,255,0.2)';
-      for (let w = 0; w < 4; w++) ctx.fillRect(bx + 8 + w * 10, H - 164 - bh + (w % 2) * 18, 6, 8);
+      for (let w = 0; w < 4; w++) {
+        const flicker = 0.1 + Math.abs(Math.sin((frame + i * 19 + w * 11) * 0.09)) * 0.22;
+        ctx.fillStyle = `rgba(120,230,255,${flicker})`;
+        ctx.fillRect(bx + 8 + w * 10, H - 164 - bh + (w % 2) * 18, 6, 8);
+      }
+      const signPulse = 0.2 + Math.abs(Math.sin((frame + i * 12) * 0.13)) * 0.35;
+      ctx.fillStyle = `rgba(255,105,190,${signPulse})`;
+      ctx.fillRect(bx + 4, H - 176 - bh, 46, 3);
     }
   } else if (L.scenery === 'industrial' || L.scenery === 'boss') {
     for (let i = 0; i < 8; i++) {
@@ -1196,13 +1233,31 @@ function drawWorld() {
       ctx.fillRect(sx + 24, H - 206, 12, 134);
       ctx.fillStyle = 'rgba(255,120,95,0.16)';
       ctx.fillRect(sx + 20, H - 212, 6, 16);
+      const smoke = wrapParallax(frame * 0.8 + i * 34, H + 50);
+      ctx.fillStyle = 'rgba(130,130,145,0.18)';
+      ctx.fillRect(sx + 19, H - 212 - smoke, 8, 10);
+    }
+    for (let i = 0; i < 5; i++) {
+      const flareX = wrapParallax(i * 190 - state.camX * 0.78 + frame * 0.8, W + 160) - 80;
+      const flareY = H - 118 + (i % 2) * 22;
+      const flarePulse = 0.2 + Math.abs(Math.sin((frame + i * 17) * 0.16)) * 0.25;
+      ctx.fillStyle = 'rgba(40,26,20,0.45)';
+      ctx.fillRect(flareX, flareY, 10, 34);
+      ctx.fillStyle = `rgba(255,140,70,${flarePulse})`;
+      ctx.fillRect(flareX - 2, flareY - 6, 14, 6);
     }
   } else if (L.scenery === 'snow') {
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 44; i++) {
       const sx = ((i * 71) + frame * 1.5 - state.camX * 0.3) % (W + 40) - 20;
       const sy = ((i * 37) + frame * 0.9) % H;
-      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.fillStyle = 'rgba(255,255,255,0.72)';
       ctx.fillRect(sx, sy, 2, 2);
+    }
+    for (let i = 0; i < 26; i++) {
+      const sx = ((i * 97) + frame * 2.6 - state.camX * 0.45) % (W + 60) - 30;
+      const sy = ((i * 52) + frame * 1.35) % H;
+      ctx.fillStyle = 'rgba(235,248,255,0.86)';
+      ctx.fillRect(sx, sy, 2.6, 2.6);
     }
     const lettersY = 78 + Math.sin(frame * 0.08) * 4;
     const rainbow = ['#e40303','#ff8c00','#ffed00','#008026','#004dff','#750787'];
@@ -1212,6 +1267,18 @@ function drawWorld() {
       ctx.font = 'bold 19px monospace';
       ctx.textAlign = 'left';
       ctx.fillText(bannerText[i], 48 + i * 14, lettersY);
+    }
+  }
+  // Foreground battlefield clutter: barricades, shell impacts, and debris flashes.
+  for (let i = 0; i < 7; i++) {
+    const debrisX = wrapParallax(i * 130 - state.camX * 1.08, W + 120) - 60;
+    const debrisY = H - 72 + (i % 3) * 6;
+    ctx.fillStyle = 'rgba(20,15,10,0.34)';
+    ctx.fillRect(debrisX, debrisY, 20, 8);
+    ctx.fillRect(debrisX + 7, debrisY - 4, 6, 4);
+    if ((frame + i * 9) % 52 < 5) {
+      ctx.fillStyle = 'rgba(255,210,130,0.32)';
+      ctx.fillRect(debrisX + 6, debrisY - 6, 8, 2);
     }
   }
   // metal-slug style foreground girders
@@ -1252,6 +1319,7 @@ function spawnParticles(x, y, colors, n=8) {
       x: x-state.camX, y,
       vx: (Math.random()-0.5)*4,
       vy: -Math.random()*4-1,
+      drag: 0.97 + Math.random() * 0.015,
       life: 40,
       maxLife: 40,
       size: 2 + Math.random() * 3,
@@ -1267,6 +1335,7 @@ function spawnSparkBurst(x, y, dir = 1, n = 6) {
       y,
       vx: dir * (2 + Math.random() * 3) + (Math.random()-0.5),
       vy: (Math.random()-0.5) * 1.5,
+      drag: 0.94 + Math.random() * 0.03,
       life: 14 + Math.floor(Math.random() * 8),
       maxLife: 22,
       size: 1.5 + Math.random() * 2,
@@ -1282,6 +1351,7 @@ function spawnShellCasings(x, y, dir = 1, n = 2) {
       y: y + (Math.random() - 0.5) * 3,
       vx: -dir * (1.2 + Math.random() * 2.2),
       vy: -1.5 - Math.random() * 2,
+      drag: 0.955,
       life: 28 + Math.floor(Math.random() * 10),
       maxLife: 38,
       size: 1.8 + Math.random() * 2.2,
@@ -1302,10 +1372,17 @@ function triggerHitStop(frames = 2) {
 
 function updateParticles() {
   state.particles = state.particles.filter(p=>{
-    p.x+=p.vx; p.y+=p.vy; p.vy+=0.15; p.life--;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vx *= p.drag || 0.985;
+    p.vy *= p.drag || 0.985;
+    p.vy += 0.13;
+    p.life--;
     return p.life>0;
   });
   state.trails = state.trails.filter(t => {
+    if (typeof t.w === 'number') t.w = Math.max(1, t.w * 0.96);
+    if (typeof t.h === 'number') t.h = Math.max(1, t.h * 0.96);
     t.life--;
     return t.life > 0;
   });
@@ -1322,6 +1399,11 @@ function drawParticles() {
     ctx.globalAlpha=p.life/(p.maxLife || 40);
     ctx.fillStyle=p.color;
     const size = p.size || 3;
+    if (size > 2.4) {
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      ctx.fillRect(p.x-size*0.7,p.y-size*0.7,size*0.6,size*0.6);
+      ctx.fillStyle=p.color;
+    }
     ctx.fillRect(p.x-size/2,p.y-size/2,size,size);
   });
   state.trails.forEach(t => {
@@ -1617,6 +1699,17 @@ function updatePlayer() {
       life: 8,
       maxLife: 8,
       color: 'rgba(255,105,180,0.22)'
+    });
+  }
+  if (Math.abs(p.vx) > 4.4 && frame % 3 === 0) {
+    state.trails.push({
+      x: p.x - p.facing * 16,
+      y: p.y + 20,
+      w: 18,
+      h: 8,
+      life: 7,
+      maxLife: 7,
+      color: 'rgba(255,220,170,0.28)'
     });
   }
 

@@ -26,10 +26,8 @@ function paintScene(canvas, sceneId, frame) {
     case 'pov_mark':        drawPovMark(ctx, W, H, frame);   break;
     case 'pov_charly':      drawPovCharly(ctx, W, H, frame); break;
     case 'level2_trans':    drawCrowdScene(ctx, W, H, frame);break;
-    case 'pov_jules':       drawPovJules(ctx, W, H, frame);  break;
     case 'pov_jairo':       drawPovJairo(ctx, W, H, frame);  break;
     case 'pov_chris':       drawPovChris(ctx, W, H, frame);  break;
-    case 'pov_marco':       drawPovMarco(ctx, W, H, frame);  break;
     case 'night_tender':    drawNightTender(ctx, W, H, frame); break;
     case 'raid_abduction':  drawRaidAbduction(ctx, W, H, frame); break;
     case 'dungeon_cell':    drawDungeonCell(ctx, W, H, frame); break;
@@ -432,15 +430,6 @@ function drawPovCharly(ctx, W, H, f) {
   ctx.fillText('"I believe in you. You are always in my heart."', W/2, 60);
 }
 
-function drawPovJules(ctx, W, H, f) {
-  drawPOVBase(ctx, W, H, f, 'JULES', '#ff7e9f', '#ffc7d8', {
-    longHair: true,
-    hairColor: '#5f2a8a'
-  });
-  ctx.fillStyle='#ffdbe7'; ctx.font='11px monospace'; ctx.textAlign='center';
-  ctx.fillText('"Breathe. Aim true. Your story is valid."', W/2, 63);
-}
-
 function drawPovJairo(ctx, W, H, f) {
   drawPOVBase(ctx, W, H, f, 'JAIRO', '#ffcf6a', '#ffe7b3', {
     hat: true,
@@ -463,17 +452,6 @@ function drawPovChris(ctx, W, H, f) {
   ctx.fillStyle='#335f44'; ctx.fillRect(tx+6,ty+36,9,9);
   ctx.fillStyle='#e3fff2'; ctx.font='11px monospace'; ctx.textAlign='center';
   ctx.fillText('"You got this, brother. Laugh and move."', W/2, 60);
-}
-
-function drawPovMarco(ctx, W, H, f) {
-  drawPOVBase(ctx, W, H, f, 'MARCO', '#90ff90', '#d4ffd4', {
-    glasses: true,
-    longHair: true,
-    hairColor: '#1a3e1a',
-    accentColor: '#d9ffd9'
-  });
-  ctx.fillStyle='#e8ffe8'; ctx.font='11px monospace'; ctx.textAlign='center';
-  ctx.fillText('"We got your six, Greg. Keep moving."', W/2, 63);
 }
 
 function drawNightTender(ctx, W, H, f) {
@@ -891,21 +869,22 @@ const CUTSCENES = {
       title: 'Finding His People',
       lines: [
         "Eric (Narrator): Greg finds people who cheer, wave flags, and understand what arriving means.",
-        "For the first time, Greg feels the city answering back with love.",
+        "Mark radios from the cafe roof and guides Greg through side streets packed with old fear and new courage.",
+        "Charly keeps civilians moving to safety while Greg clears each block one burst at a time.",
         "Still, stray doubts keep rushing him from the edges.",
-        "Eric (Narrator): He keeps moving — one block closer to his gay lover, one breath at a time."
+        "Eric (Narrator): Every alley he survives becomes a sentence in the life he should have lived from day one."
       ]
     }
   ],
 
   after_level3: [
     {
-      scene: 'pov_jules',
-      title: 'POV: Jules Checks In',
+      scene: 'pov_mark',
+      title: 'POV: Mark Sends Coordinates',
       lines: [
-        "Greg spots Jules waiting beneath a train sign, calm as ever.",
-        "\"You're doing it,\" Jules says. \"Every step is proof.\"",
-        "Eric (Narrator): Greg tightens his grip and pushes toward the parade route."
+        "Mark appears on Greg's comms with a scribbled city map and a grin.",
+        "\"Two more chokepoints and you punch through,\" Mark says. \"Stay mobile and keep your heart loud.\"",
+        "Eric (Narrator): Greg nods, checks ammo, and charges deeper into the district."
       ]
     },
     {
@@ -914,7 +893,8 @@ const CUTSCENES = {
       lines: [
         "Jairo Short appears — buff, bearded, Latino, hat tilted low and confident smile ready.",
         "\"Come here,\" Jairo says, touching Greg's shoulder. \"You don't fight alone.\"",
-        "Eric (Narrator): Greg feels his chest open. This love is brave, loud, and real."
+        "Eric (Narrator): Greg feels his chest open. This love is brave, loud, and real.",
+        "They lock eyes, laugh through the gunfire, and sprint back into the parade of chaos."
       ]
     },
     {
@@ -930,12 +910,12 @@ const CUTSCENES = {
 
   after_level4: [
     {
-      scene: 'pov_marco',
-      title: 'POV: Marco Joins The Push',
+      scene: 'pov_charly',
+      title: 'POV: Charly Holds The Line',
       lines: [
-        "Music thumps from a distant block party as Marco jogs up beside Greg.",
-        "\"No more hiding,\" Marco says. \"Let's clear this last street together.\"",
-        "Charly, Mark, Jairo, and Chris stand behind him — chosen family and true love in one frame."
+        "Charly steps from a flickering doorway, glasses bright with rain and siren light.",
+        "\"Go,\" Charly says, reloading a sidearm and covering Greg's flank. \"I've got this block.\"",
+        "Eric (Narrator): In that moment Greg understands chosen family as battlefield truth."
       ]
     }
   ],
@@ -945,9 +925,9 @@ const CUTSCENES = {
       scene: 'night_tender',
       title: 'A Quiet Night Together',
       lines: [
-        "For one precious night, Greg, Jairo, and Chris finally rest in the same bed after an animalistic, all-night blur of passion and laughter.",
+        "For one precious night, Greg, Jairo, and Chris finally breathe between missions.",
         "Jairo kisses Greg's forehead while Chris pulls the blanket over all three and jokes that this is the real victory loot.",
-        "Greg falls asleep between his lovers, feeling safe, chosen, and deeply loved."
+        "Eric (Narrator): The city is still dangerous, but this room feels like home."
       ]
     },
     {
@@ -965,7 +945,8 @@ const CUTSCENES = {
       lines: [
         "A hacked city feed flashes a cold dungeon cell where Jairo and Chris are trapped behind steel bars.",
         "Jairo grips Chris's hand and shouts: \"Greg, don't fold. We know you. You always come through.\"",
-        "Chris grins through bruises: \"Bring that fabulous chaos, babe. We'll hold the line till you arrive.\""
+        "Chris grins through bruises: \"Bring that fabulous chaos, babe. We'll hold the line till you arrive.\"",
+        "Eric (Narrator): Greg slams a fresh magazine into place and starts running before the feed even cuts."
       ]
     }
   ],
@@ -1004,7 +985,7 @@ const CUTSCENES = {
       lines: [
         "Greg reloads under neon rain and pins their names to his heart: Jairo. Chris.",
         "He promises out loud: \"I'm coming for both of you. Nobody cages my lovers.\"",
-        "Eric (Narrator): The city trembles as Greg storms toward TR's final fortress."
+        "Eric (Narrator): Mark and Charly keep comms alive while Greg storms toward TR's final fortress."
       ]
     },
     {
@@ -1014,7 +995,7 @@ const CUTSCENES = {
       lines: [
         "The sky burns red as TR steps out for one last stand above the dungeon controls.",
         "TR once fired Greg for being gay and now cages the men Greg loves, pretending cruelty is power.",
-        "Greg hears every ally in his mind — and Jairo and Chris strongest of all — then chambers a round and steps forward."
+        "Greg hears every ally in his mind — Eric, Charly, Mark, Jairo, and Chris — then chambers a round and steps forward."
       ]
     }
   ],
@@ -1040,7 +1021,7 @@ const CUTSCENES = {
         "TR's hate campaign shatters into a thousand pieces of light.",
         "Greg kisses Jairo in the middle of the street while Chris cheers and pulls them into a laughing hug.",
         "Charly gives Greg a soft smile and lets him go, proud that he finally chose his truth.",
-        "The three men walk into a heart-shaped sunset together — loud, gay, and deeply in love."
+        "Mark and Eric watch from the curb as the three men walk into a heart-shaped sunset together — loud, gay, and deeply in love."
       ]
     },
     {
